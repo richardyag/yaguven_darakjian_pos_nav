@@ -20,8 +20,8 @@ class ProductTemplate(models.Model):
         string="POS Priority Load",
         store=True,
         default=False,
-        help="Si True, el producto se incluye en la carga inicial del POS. "
-             "Los demás se cargan en background por categoría.",
+        help="When set, the product is part of the initial POS load. The rest are "
+             "loaded in the background, category by category.",
     )
 
     @api.model

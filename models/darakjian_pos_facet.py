@@ -19,11 +19,11 @@ class DarakjianPosFacet(models.Model):
         string="Attribute",
         required=True,
         ondelete="cascade",
-        help="Atributo nativo que se ofrece como faceta de filtrado en el POS.",
+        help="Native attribute offered as a filtering facet in the POS.",
     )
     label = fields.Char(
         string="Label",
-        help="Etiqueta a mostrar en el POS. Si se deja vacío, se usa el nombre del atributo.",
+        help="Label shown in the POS. Left empty, the attribute name is used.",
     )
     sequence = fields.Integer(default=10)
     active = fields.Boolean(default=True)
@@ -32,12 +32,12 @@ class DarakjianPosFacet(models.Model):
         string="Display",
         default="chips",
         required=True,
-        help="Cómo se muestran los valores de la faceta: como chips o como lista.",
+        help="How the facet values are shown: as chips or as a list.",
     )
 
     _sql_constraints = [
         ("attribute_uniq", "unique(attribute_id)",
-         "Ese atributo ya está configurado como faceta."),
+         "That attribute is already configured as a facet."),
     ]
 
     @api.depends("attribute_id", "label")

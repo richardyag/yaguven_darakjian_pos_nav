@@ -8,7 +8,7 @@
             <list string="POS Facets" editable="bottom">
                 <field name="sequence" widget="handle"/>
                 <field name="attribute_id"/>
-                <field name="label" placeholder="(usa el nombre del atributo)"/>
+                <field name="label" placeholder="(uses the attribute name)"/>
                 <field name="display_type"/>
                 <field name="active" widget="boolean_toggle"/>
             </list>
@@ -23,7 +23,7 @@
                 <sheet>
                     <group>
                         <field name="attribute_id"/>
-                        <field name="label" placeholder="(usa el nombre del atributo)"/>
+                        <field name="label" placeholder="(uses the attribute name)"/>
                         <field name="display_type"/>
                         <field name="sequence"/>
                         <field name="active" widget="boolean_toggle"/>
@@ -38,8 +38,8 @@
         <field name="res_model">darakjian.pos.facet</field>
         <field name="view_mode">list,form</field>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">Configurá las facetas del POS</p>
-            <p>Elegí qué atributos de producto se ofrecen como filtros en la pantalla de venta.</p>
+            <p class="o_view_nocontent_smiling_face">Configure the POS facets</p>
+            <p>Choose which product attributes are offered as filters on the selling screen.</p>
         </field>
     </record>
 

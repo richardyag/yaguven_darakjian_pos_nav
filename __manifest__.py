@@ -4,19 +4,18 @@
     "summary": "Faceted attribute filter bar and on-demand vertical category "
                "tree overlay for the Point of Sale product screen.",
     "description": """
-Mejora la navegación de categorías del POS para Darakjian Jewelers:
+Improves category navigation in the Point of Sale for Darakjian Jewelers:
 
-* Barra de **facetas** por atributos de producto (metal, piedra, tipo, precio…),
-  configurable desde ajustes — sin tocar modelos nativos.
-* **Árbol vertical** de categorías en overlay, invocable bajo demanda, que muestra
-  la jerarquía completa (la "diferencia de jerarquía en vertical" pedida por el
-  cliente) sin sacrificar el ancho de la grilla de productos.
+* A **facet bar** driven by product attributes (metal, stone, type, price…),
+  configurable from the settings — without touching any native model.
+* A **vertical category tree** in an overlay, opened on demand, showing the full
+  hierarchy without giving up the width of the product grid.
 
-Diseño responsive: targets táctiles ampliados en tablet (pointer: coarse) y vista
-densa en escritorio. Toda la lógica vive dentro del módulo (herencia/patch sobre
-el POS nativo OWL, sin campos en modelos nativos).
+Responsive by design: enlarged touch targets on tablet (pointer: coarse) and a dense
+view on desktop. All the logic lives inside the module, as inheritance and patches over
+the native OWL Point of Sale, with no fields added to native models.
 """,
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.1.0",
     "category": "Point of Sale",
     "author": "Yagüven C.G.",
     "website": "https://github.com/GuvensConsultora/yaguven_darakjian_pos_nav",
