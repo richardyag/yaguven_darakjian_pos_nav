@@ -10,7 +10,7 @@
                     <button class="darakjian-tree-close" t-on-click="() => this.close()">✕</button>
                 </div>
                 <div class="darakjian-tree-body">
-                    <!-- Fila "Todos": limpia el filtro y muestra todos los productos -->
+                    <!-- The "All" row: clears the filter and shows every product -->
                     <div class="darakjian-tree-row darakjian-tree-row--all"
                          t-att-class="{ 'darakjian-tree-row--active': !selectedCategoryId }"
                          t-on-click="() => this.clearCategory()">

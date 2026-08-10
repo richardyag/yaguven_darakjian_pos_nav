@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
-    <!-- Inserta la barra de facetas + botón "Categories" + overlay del árbol.
-         VERIFICAR EN INSTANCIA: el `expr` del xpath debe apuntar a un contenedor
-         real del template point_of_sale.ProductScreen de Odoo 19 (la clase exacta
-         de la columna de productos puede diferir). Si no matchea, reapuntar. -->
-    <!-- Odoo 19 ProductScreen: no existe 'product-list-container'; el área de
-         productos vive en rightpane > position-relative > CategorySelector +
-         product-list (t-foreach). Anclamos en CategorySelector que es el primer
-         hijo estable del contenedor position-relative, lo que asegura que
-         DarakjianCategoryTree quede dentro del ancestro position-relative que
-         necesita para su overlay position:absolute/inset:0. -->
+    <!-- Inserts the facet bar, the "Categories" button and the tree overlay.
+         CHECK ON THE INSTANCE: the xpath `expr` has to point at a container that
+         really exists in Odoo 19's point_of_sale.ProductScreen template - the exact
+         class of the product column can differ. If it does not match, repoint it. -->
+    <!-- Odoo 19 ProductScreen: there is no 'product-list-container'; the product area
+         lives at rightpane > position-relative > CategorySelector + product-list
+         (t-foreach). We anchor on CategorySelector, the first stable child of the
+         position-relative container, which guarantees DarakjianCategoryTree ends up
+         inside the position-relative ancestor its position:absolute/inset:0 overlay
+         needs. -->
     <t t-inherit="point_of_sale.ProductScreen" t-inherit-mode="extension">
         <xpath expr="//CategorySelector" position="before">
             <div class="darakjian-pos-nav">
@@ -25,8 +25,8 @@
         <xpath expr="//CategorySelector" position="after">
             <DarakjianCategoryTree/>
         </xpath>
-        <!-- Eliminar el CategorySelector nativo: la navegación de categorías
-             se hace exclusivamente a través del árbol vertical custom. -->
+        <!-- Remove the native CategorySelector: category navigation happens solely
+             through the custom vertical tree. -->
         <xpath expr="//CategorySelector" position="replace"/>
     </t>
 

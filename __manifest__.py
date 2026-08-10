@@ -20,13 +20,13 @@ the native OWL Point of Sale, with no fields added to native models.
     "author": "Yagüven C.G.",
     "website": "https://github.com/GuvensConsultora/yaguven_darakjian_pos_nav",
     "license": "LGPL-3",
-    # Solo nativo de Odoo (C.2): el POS y su framework. Nada de OCA/terceros.
+    # Stock Odoo only: the POS and its framework. No OCA, no third-party modules.
     "depends": ["point_of_sale"],
     "data": [
         "security/ir.model.access.csv",
         "views/darakjian_pos_facet_views.xml",
     ],
-    # Componentes OWL inyectados en el bundle del POS.
+    # OWL components injected into the POS bundle.
     "assets": {
         "point_of_sale._assets_pos": [
             "yaguven_darakjian_pos_nav/static/src/scss/pos_nav.scss",

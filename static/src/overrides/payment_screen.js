@@ -1,9 +1,9 @@
 /** @odoo-module **/
-// Fix refund — signo negativo en pantalla de pago:
-// El cajero tipea 127 (positivo, comportamiento natural) pero el sistema
-// necesita -127. triggerAtInput llama updateSelectedPaymentline en cada
-// tecla; si el buffer trae positivo en una orden de refund, lo negamos
-// antes de delegarlo al nativo.
+// Refund fix - the negative sign on the payment screen:
+// The cashier types 127, positive, which is the natural thing to do, but the system needs
+// -127. triggerAtInput calls updateSelectedPaymentline on every keystroke; when the buffer
+// holds a positive number on a refund order, we negate it before handing over to the
+// native implementation.
 
 import { patch } from "@web/core/utils/patch";
 import { PaymentScreen } from "@point_of_sale/app/screens/payment_screen/payment_screen";

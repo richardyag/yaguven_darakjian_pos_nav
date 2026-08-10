@@ -1,7 +1,7 @@
 /** @odoo-module **/
-// Barra de facetas del POS: por cada atributo configurado como faceta, muestra
-// sus valores como chips activables. Lee la config (darakjian.pos.facet) y los
-// valores (product.attribute.value) cargados al POS.
+// The POS facet bar: for each attribute configured as a facet, it shows its values as
+// toggleable chips. It reads the configuration (darakjian.pos.facet) and the values
+// (product.attribute.value) loaded into the POS.
 
 import { Component } from "@odoo/owl";
 import { usePos } from "@point_of_sale/app/hooks/pos_hook";
@@ -15,16 +15,16 @@ export class DarakjianFacetBar extends Component {
     }
 
     _attrId(rec) {
-        // m2o puede venir como record (si el modelo está cargado) o como id.
+        // An m2o may arrive as a record (when the model is loaded) or as an id.
         return rec && rec.attribute_id && rec.attribute_id.id !== undefined
             ? rec.attribute_id.id
             : rec.attribute_id;
     }
 
     get facets() {
-        // Defensivo: si alguno de los modelos no está cargado en pos.models,
-        // devolver [] en vez de hacer getAll() sobre undefined — eso crashea
-        // el lifecycle de OWL y tumba el POS entero, aun sin facetas configuradas.
+        // Defensive: if either model is missing from pos.models, return [] rather than
+        // calling getAll() on undefined - that crashes the OWL lifecycle and takes the
+        // whole POS down, even when no facets are configured.
         const facetModel = this.pos.models["darakjian.pos.facet"];
         const valueModel = this.pos.models["product.attribute.value"];
         if (!facetModel || !valueModel) {

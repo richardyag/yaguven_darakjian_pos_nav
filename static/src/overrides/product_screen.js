@@ -1,8 +1,8 @@
 /** @odoo-module **/
-// Patch de ProductScreen (C.2: extender, no reescribir):
-//  1. Registra los componentes FacetBar y CategoryTree.
-//  2. Expone el botón para abrir el árbol vertical.
-//  3. Inyecta el filtrado por facetas sobre la lista de productos visible.
+// ProductScreen patch - extend, never rewrite:
+//  1. Registers the FacetBar and CategoryTree components.
+//  2. Exposes the button that opens the vertical tree.
+//  3. Injects facet filtering over the visible product list.
 
 import { patch } from "@web/core/utils/patch";
 import { ProductScreen } from "@point_of_sale/app/screens/product_screen/product_screen";
@@ -23,8 +23,8 @@ patch(ProductScreen.prototype, {
     openDarakjianTree() {
         this.pos.darakjianTreeOpen = true;
     },
-    // El filtrado por facetas NO va acá: el grid de O19 itera
-    // pos.productToDisplayByCateg → pos.productsToDisplay (getters del PosStore),
-    // nunca el getter `products` de este componente.  El override del filtro
-    // vive en store.js (PosStore.productsToDisplay), que es donde sí tiene efecto.
+    // Facet filtering does NOT belong here: the Odoo 19 grid iterates
+    // pos.productToDisplayByCateg -> pos.productsToDisplay, both PosStore getters, and
+    // never this component's `products` getter. The filter override lives in store.js
+    // (PosStore.productsToDisplay), which is where it actually takes effect.
 });

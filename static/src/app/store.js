@@ -1,23 +1,23 @@
 /** @odoo-module **/
-// Estado reactivo de la navegación custom del POS Darakjian: facetas activas,
-// overlay del árbol, y la lógica de matcheo client-side. Se engancha al PosStore
-// nativo por patch (C.2: extendemos, no reescribimos).
+// Reactive state for Darakjian's custom POS navigation: active facets, the tree overlay,
+// and the client-side matching logic. It hooks into the native PosStore through a patch:
+// we extend, we do not rewrite.
 
 import { patch } from "@web/core/utils/patch";
 import { PosStore } from "@point_of_sale/app/services/pos_store";
 
-// Categorías ya cargadas / en vuelo en esta sesión (evitan doble-carga).
+// Categories already loaded, or in flight, in this session - they prevent double loads.
 const _dkLoadedCateg = new Set();
 const _dkLoadingCateg = new Set();
-// Tope de templates no-prioritarios a traer al entrar a una categoría.  Acota
-// el volumen para que una categoría enorme no cuelgue; el resto queda accesible
-// por la búsqueda nativa del POS.
+// Cap on how many non-priority templates are fetched when entering a category. It bounds
+// the volume so a huge category cannot hang the UI; everything beyond the cap stays
+// reachable through the POS's native search.
 const DK_CATEG_LIMIT = 50;
 
 patch(PosStore.prototype, {
-    // Odoo 19 pos_hr bug: getCashier() devuelve undefined antes de que el
-    // empleado esté cargado y crashea con "_role" de undefined. Aplicamos
-    // optional chaining para que retorne false en lugar de tirar.
+    // Odoo 19 pos_hr bug: getCashier() returns undefined before the employee is loaded
+    // and then crashes on "_role" of undefined. Optional chaining makes it return false
+    // instead of throwing.
     get employeeIsAdmin() {
         const cashier = this.getCashier?.();
         return cashier?._role === "manager";
@@ -25,17 +25,17 @@ patch(PosStore.prototype, {
 
     setup() {
         super.setup(...arguments);
-        // Facetas activas: { [String(attributeId)]: [valueId, ...] }
+        // Active facets: { [String(attributeId)]: [valueId, ...] }
         this.darakjianFacets = {};
-        // Overlay del árbol vertical de categorías.
+        // Overlay holding the vertical category tree.
         this.darakjianTreeOpen = false;
     },
 
-    /** Override del getter REAL que alimenta la grilla del POS O19.
-     *  El template product_screen.xml itera pos.productToDisplayByCateg, que
-     *  deriva de pos.productsToDisplay (getter del PosStore) — NO del getter
-     *  `products` del componente ProductScreen.  Por eso el filtro de facetas
-     *  debe aplicarse acá para tener efecto. */
+    /** Override of the getter that REALLY feeds the Odoo 19 POS grid.
+     *  product_screen.xml iterates pos.productToDisplayByCateg, which derives from
+     *  pos.productsToDisplay, a PosStore getter - NOT from the ProductScreen component's
+     *  own `products` getter. That is why the facet filter has to be applied here to have
+     *  any effect at all. */
     get productsToDisplay() {
         const base = super.productsToDisplay;
         if (!this.darakjianActiveFacetCount) {
@@ -44,8 +44,8 @@ patch(PosStore.prototype, {
         return base.filter((p) => this.darakjianProductMatches(p));
     },
 
-    /** Activa/desactiva un valor de faceta. Reasigna el objeto para disparar
-     *  la reactividad de OWL (mutar in-place no siempre la dispara). */
+    /** Toggles one facet value. The object is reassigned rather than mutated, because
+     *  mutating in place does not always trigger OWL's reactivity. */
     darakjianToggleFacetValue(attributeId, valueId) {
         const key = String(attributeId);
         const cur = this.darakjianFacets[key] || [];
@@ -73,8 +73,8 @@ patch(PosStore.prototype, {
         return Object.values(this.darakjianFacets).reduce((n, arr) => n + arr.length, 0);
     },
 
-    /** ¿El producto pasa el filtro de facetas activas?
-     *  AND entre atributos distintos, OR entre valores del mismo atributo. */
+    /** Does the product pass the active facet filter?
+     *  AND across different attributes, OR across values of the same attribute. */
     darakjianProductMatches(product) {
         const keys = Object.keys(this.darakjianFacets);
         if (!keys.length) {
@@ -88,25 +88,26 @@ patch(PosStore.prototype, {
         });
     },
 
-    // ─── Carga on-demand de no-prioritarios por categoría ─────────────────────
-    // NO se precarga el catálogo en background: precargar las ~144 categorías
-    // (varias con miles de productos) saturaba la cola de sync del POS y trababa
-    // el cierre de sesión.  En su lugar, cada categoría se carga SOLO cuando el
-    // cajero la selecciona (ver setSelectedCategory), y acotada por DK_CATEG_LIMIT
-    // para que una categoría enorme (p.ej. Watches: 2.2k) no cuelgue la UI.
+    // --- On-demand loading of non-priority products, category by category -----------
+    // The catalog is NOT preloaded in the background: preloading the ~144 categories,
+    // several of them holding thousands of products, saturated the POS sync queue and
+    // jammed the session close. Instead each category is loaded ONLY when the cashier
+    // selects it (see setSelectedCategory), bounded by DK_CATEG_LIMIT so that a huge
+    // category (Watches, at 2.2k) cannot hang the UI.
     //
-    // Apoyado 100% en APIs nativas O19: load_product_from_pos (server) devuelve
-    // templates + variantes + taxes + atributos en el shape del payload inicial
-    // (image_128 como bool → imágenes por URL lazy); callRelated los mergea con
-    // el connectNewData nativo.  Sin formato ni merge custom → robusto en upgrades.
+    // Built entirely on native Odoo 19 APIs: load_product_from_pos returns templates +
+    // variants + taxes + attributes in the same shape as the initial payload (image_128
+    // as a bool, so images come lazily by URL), and callRelated merges them through the
+    // native connectNewData. No custom format and no custom merge, which is what makes it
+    // survive upgrades.
 
     async darakjianLoadCateg(catId) {
         if (_dkLoadedCateg.has(catId) || _dkLoadingCateg.has(catId)) return;
         _dkLoadingCateg.add(catId);
         try {
-            // Templates no-prioritarios de la categoría (los prioritarios ya
-            // entraron en la carga inicial).  Los que excedan el límite quedan
-            // accesibles por la búsqueda nativa del POS.
+            // Non-priority templates for the category; the priority ones already came
+            // in with the initial load. Anything past the cap stays reachable through
+            // the POS's native search.
             const domain = [
                 ["pos_categ_ids", "=", catId],
                 ["pos_load_priority", "=", false],
@@ -127,15 +128,15 @@ patch(PosStore.prototype, {
 
     async darakjianEnsureCategLoaded(catId) {
         if (!catId || _dkLoadedCateg.has(catId)) return;
-        // No await: la carga corre en segundo plano y la UI se actualiza sola al
-        // mergear (reactividad de connectNewData).  No bloquea la navegación.
+        // Deliberately not awaited: the load runs in the background and the UI updates
+        // itself on merge, through connectNewData's reactivity. Navigation never blocks.
         this.darakjianLoadCateg(catId).catch((e) =>
-            console.warn(`[Darakjian] carga categ ${catId} falló:`, e)
+            console.warn(`[Darakjian] loading category ${catId} failed:`, e)
         );
     },
 
-    /** Al elegir una categoría, cargar sus no-prioritarios ya si el loop de
-     *  background todavía no llegó (carga inmediata, mejor UX). */
+    /** On picking a category, load its non-priority products right away if the
+     *  background loop has not reached it yet - immediate beats eventual here. */
     setSelectedCategory(categoryId) {
         super.setSelectedCategory(categoryId);
         this.darakjianEnsureCategLoaded(categoryId);

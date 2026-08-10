@@ -3,10 +3,10 @@ from odoo import api, fields, models
 
 
 class DarakjianPosFacet(models.Model):
-    """Configuración de qué atributos de producto se exponen como facetas en el POS.
+    """Which product attributes are exposed as facets in the POS.
 
-    Vive enteramente en este módulo (C.2): un many2one al nativo product.attribute,
-    sin agregar campos a modelos nativos. Se carga al POS vía pos.load.mixin.
+    It lives entirely inside this module: a many2one to the native product.attribute,
+    with no fields added to native models. Loaded into the POS through pos.load.mixin.
     """
 
     _name = "darakjian.pos.facet"
@@ -45,8 +45,8 @@ class DarakjianPosFacet(models.Model):
         for rec in self:
             rec.display_name = rec.label or (rec.attribute_id.name or "")
 
-    # ---- carga al POS (pos.load.mixin) ----
-    # Odoo 19: la firma del mixin es _load_pos_data_domain(self, data, config).
+    # ---- loading into the POS (pos.load.mixin) ----
+    # Odoo 19: the mixin signature is _load_pos_data_domain(self, data, config).
     @api.model
     def _load_pos_data_domain(self, data, config):
         return [("active", "=", True)]

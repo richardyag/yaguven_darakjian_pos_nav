@@ -44,7 +44,7 @@
     </record>
 
     <!-- VERIFICAR placement: parent menu bajo Point of Sale. menu_point_root es
-         estable entre versiones; refinar a Configuración si se prefiere. -->
+         stable across versions; move it under Configuration if preferred. -->
     <menuitem id="menu_darakjian_pos_facet"
               name="POS Facets"
               parent="point_of_sale.menu_point_root"

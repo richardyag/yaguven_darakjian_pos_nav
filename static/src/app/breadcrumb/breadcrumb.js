@@ -1,8 +1,8 @@
 /** @odoo-module **/
-// Migas de pan de la categoría seleccionada: muestra la ruta desde la raíz
-// hasta la categoría actual (ej. Jewelry › Rings › Wedding Bands).  Cada nivel
-// es clickeable para saltar a esa categoría.  Lee pos.selectedCategory (getter
-// reactivo del PosStore), así que se actualiza solo al navegar.
+// Breadcrumb for the selected category: shows the path from the root down to the
+// current category (e.g. Jewelry > Rings > Wedding Bands). Every level is clickable to
+// jump straight to it. It reads pos.selectedCategory, a reactive getter on the PosStore,
+// so it keeps itself up to date as the user navigates.
 
 import { Component } from "@odoo/owl";
 import { usePos } from "@point_of_sale/app/hooks/pos_hook";
@@ -15,8 +15,8 @@ export class DarakjianBreadcrumb extends Component {
         this.pos = usePos();
     }
 
-    /** Resuelve un parent_id que puede venir como record (m2o cargado) o como
-     *  id crudo, devolviendo siempre el record de pos.category o null. */
+    /** Resolves a parent_id that may arrive either as a record (when the m2o is
+     *  loaded) or as a raw id, always returning the pos.category record or null. */
     _resolve(rel) {
         if (!rel) {
             return null;
@@ -27,8 +27,8 @@ export class DarakjianBreadcrumb extends Component {
         return this.pos.models["pos.category"].get(rel) || null;
     }
 
-    /** Cadena raíz → actual.  El Set guard evita loops si hubiera un ciclo de
-     *  parent_id corrupto en los datos. */
+    /** The chain from root to current. The Set guard prevents an infinite loop should
+     *  the data ever contain a cycle of parent_id. */
     get trail() {
         let node = this.pos.selectedCategory;
         if (!node || !node.id) {

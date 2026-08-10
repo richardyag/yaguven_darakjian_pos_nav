@@ -9,16 +9,15 @@ export class DarakjianCategoryTree extends Component {
     setup() {
         this.pos = usePos();
         this.state = useState({ expandedByDepth: {} });
-        // CategorySelector nativo fue reemplazado por este árbol.
-        // Al montar, inicializar la categoría seleccionada con la primera
-        // disponible en la config (evita que el POS muestre todos los productos
-        // a la vez, lo que traba el browser con miles de cards + image requests).
+        // This tree replaced the native CategorySelector. On mount, seed the selected
+        // category with the first one available in the config, so the POS does not show
+        // every product at once - which locks the browser up with thousands of cards and
+        // image requests.
         onMounted(() => {
-            // CategorySelector nativo fue reemplazado por este árbol; nadie
-            // inicia la selección.  Arrancar enfocado en la primera categoría
-            // disponible (mejor UX que mostrar el catálogo entero).  Las
-            // imágenes ya no son un problema de performance: el override de
-            // ProductCard agrega loading="lazy" → solo se cargan las visibles.
+            // With the native CategorySelector gone, nothing else starts the
+            // selection. Opening on the first available category beats showing the whole
+            // catalog. Images are no longer a performance problem: the ProductCard
+            // override adds loading="lazy", so only the visible ones are fetched.
             if (!this.pos.selectedCategory) {
                 const configCatIds = this.pos.config.iface_available_categ_ids || [];
                 const firstId = configCatIds.length
@@ -44,11 +43,11 @@ export class DarakjianCategoryTree extends Component {
         }
         const sortFn = (a, b) => (a.sequence - b.sequence) || (a.id - b.id);
 
-        // Construye el árbol COMPLETO, sin podar: se muestran todas las
-        // categorías con su jerarquía, igual que la vista de inventario.  Antes
-        // se podaban las ramas sin productos cargados, pero con la carga lazy
-        // (solo prioritarios al inicio) eso escondía casi todo el árbol.  Al
-        // hacer click en una categoría sus productos se cargan on-demand.
+        // Builds the COMPLETE tree, unpruned: every category is shown with its
+        // hierarchy, exactly as the inventory view does. Branches with no loaded products
+        // used to be pruned, but with lazy loading (only priority products at startup)
+        // that hid nearly the whole tree. Clicking a category loads its products on
+        // demand.
         const build = (cat, depth) => {
             const children = (childrenOf[cat.id] || [])
                 .sort(sortFn)
@@ -88,7 +87,7 @@ export class DarakjianCategoryTree extends Component {
     }
 
     clearCategory() {
-        // Limpiar la selección muestra todos los productos.
+        // Clearing the selection shows every product.
         this.pos.selectedCategory = null;
         this.close();
     }

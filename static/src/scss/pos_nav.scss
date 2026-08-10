@@ -1,14 +1,14 @@
-// Estilos de la navegación custom del POS Darakjian.
-// Colores semánticos vía CSS variables de Bootstrap 5 (--bs-*) para que el
-// tema claro y oscuro del POS se respete automáticamente.
-// Solo $dk-accent se mantiene fijo: es el color de marca del estudio.
+// Styling for Darakjian's custom POS navigation.
+// Semantic colors come from Bootstrap 5 CSS variables (--bs-*) so the POS light and dark
+// themes are honoured automatically.
+// Only $dk-accent stays fixed: it is the firm's brand color.
 
 $dk-chip-radius: 16px;
 $dk-accent: #2c3e50;
-// Paleta "Noche & Oro" del panel de categorías (look premium fijo, opaco,
-// independiente del tema claro/oscuro del POS).
+// The "Night & Gold" palette for the category panel: a fixed, opaque, premium look that
+// does not follow the POS light/dark theme.
 $dk-gold: #c9a96a;
-$dk-panel-bg: #1b2030;       // carbón profundo, 100% opaco
+$dk-panel-bg: #1b2030;       // deep charcoal, fully opaque
 $dk-panel-text: #f3efe6;     // marfil
 
 .darakjian-pos-nav {
@@ -17,16 +17,16 @@ $dk-panel-text: #f3efe6;     // marfil
     gap: 10px;
     padding: 10px 12px;
     flex-wrap: wrap;
-    // Fondo sólido + borde de marca: la barra deja de ser transparente y se
-    // distingue claramente del fondo del POS (incl. tema oscuro), evitando la
-    // confusión visual.  --bs-* respeta claro/oscuro automáticamente.
+    // Solid background plus a brand border: the bar stops being transparent and reads
+    // clearly against the POS background, dark theme included. The --bs-* variables
+    // follow light/dark on their own.
     background: var(--bs-secondary-bg);
     border-bottom: 3px solid $dk-accent;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 
     .darakjian-tree-toggle {
         white-space: nowrap;
-        // Botón principal de navegación: prominente y legible.
+        // The main navigation button: prominent and legible.
         background: $dk-accent;
         border-color: $dk-accent;
         color: #fff;
@@ -44,7 +44,7 @@ $dk-panel-text: #f3efe6;     // marfil
     }
 }
 
-// ---- Migas de pan (categoría actual) ----
+// ---- Breadcrumb (current category) ----
 .darakjian-breadcrumb {
     display: flex;
     align-items: center;
@@ -88,7 +88,7 @@ $dk-panel-text: #f3efe6;     // marfil
     }
 }
 
-// ---- Barra de facetas ----
+// ---- Facet bar ----
 .darakjian-facet-bar {
     display: flex;
     align-items: center;
@@ -147,7 +147,7 @@ $dk-panel-text: #f3efe6;     // marfil
     }
 }
 
-// ---- Overlay del árbol vertical ----
+// ---- Vertical tree overlay ----
 .darakjian-tree-overlay {
     position: absolute;
     inset: 0;
@@ -164,9 +164,9 @@ $dk-panel-text: #f3efe6;     // marfil
         position: relative;
         width: 380px;
         max-width: 85%;
-        // Fondo sólido OPACO: el problema era var(--bs-body-bg), que en el
-        // contexto del POS en modo oscuro no resolvía a un color sólido → el
-        // panel se veía translúcido sobre la grilla.  Color fijo premium.
+        // A solid OPAQUE background. The problem was var(--bs-body-bg), which in the
+        // POS's dark mode did not resolve to a solid color, leaving the panel looking
+        // translucent over the grid. Fixed premium color instead.
         background: $dk-panel-bg;
         color: $dk-panel-text;
         border-right: 2px solid $dk-gold;       // filo dorado
@@ -188,7 +188,7 @@ $dk-panel-text: #f3efe6;     // marfil
             font-weight: 700;
             font-size: 19px;
             letter-spacing: 0.3px;
-            color: $dk-gold;                    // título en dorado
+            color: $dk-gold;                    // title in gold
         }
 
         .darakjian-tree-close {
@@ -220,8 +220,8 @@ $dk-panel-text: #f3efe6;     // marfil
             background: rgba(255, 255, 255, 0.06);
         }
 
-        // Categoría activa: filo dorado + leve realce dorado de fondo, texto
-        // en dorado claro.  Acento "Noche & Oro" sobre el carbón del panel.
+        // Active category: a gold edge, a faint gold wash behind it and light gold text
+        // - the "Night & Gold" accent over the panel's charcoal.
         &--active {
             background: rgba(201, 169, 106, 0.12);
             border-left: 3px solid $dk-gold;
@@ -255,23 +255,23 @@ $dk-panel-text: #f3efe6;     // marfil
     }
 }
 
-// ---- Tamaño de tarjetas de producto (+20% ancho, +10% alto vs. default O19) ----
+// ---- Product card size (+20% wider, +10% taller than the Odoo 19 default) ----
 // O19 POS usa .product-list (grid) y .product (card).
 // Default estimado: minmax(120px, 1fr) / altura ~130px (sin imagen) o ~160px (con imagen).
-// Con imágenes activas, height incluye el thumbnail arriba + nombre + precio abajo.
+// With images on, the height covers the thumbnail on top plus name and price below.
 .product-list {
-    // +20% ancho mínimo: 120px → 144px
+    // +20% on the minimum width: 120px -> 144px
     grid-template-columns: repeat(auto-fill, minmax(144px, 1fr)) !important;
 }
 
 .product-list .product {
-    // +10% alto: ~160px → 176px (con imágenes)
+    // +10% on the height: ~160px -> 176px (with images)
     min-height: 176px !important;
-    // Fallback flexbox si O19 no usa grid en esta versión:
+    // Flexbox fallback in case this Odoo 19 build does not use grid:
     width: 144px !important;
 }
 
-// ---- Ergonomía táctil (tablet): solo cuando el puntero es grueso ----
+// ---- Touch ergonomics for tablet: only when the pointer is coarse ----
 @media (pointer: coarse) {
     .darakjian-pos-nav .darakjian-facet-chip,
     .darakjian-pos-nav .darakjian-tree-toggle {
