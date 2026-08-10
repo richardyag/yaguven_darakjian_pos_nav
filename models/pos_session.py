@@ -119,7 +119,7 @@ class ProductAttributeValue(models.Model):
 
 
 class ProductProduct(models.Model):
-    """Variantes en el POS: solo prioritarias al arranque; resto en background."""
+    """POS variants: priority ones at startup, the rest in the background."""
 
     _inherit = "product.product"
 
