@@ -54,7 +54,7 @@ class PosSession(models.Model):
 
         BOTH models have to be present in the frontend's pos.models even when no facets
         are configured: the DarakjianFacetBar component reads
-        this.pos.models["product.attribute.value"] y ["darakjian.pos.facet"]
+        this.pos.models["product.attribute.value"] and ["darakjian.pos.facet"]
         in its `facets` getter. If either is missing, getAll() on undefined crashes the
         OWL lifecycle and takes the whole POS down. Volume is controlled through the
         domain (_load_pos_data_domain), never by dropping the model.
@@ -67,18 +67,17 @@ class PosSession(models.Model):
 
     # On-demand loading of products by category is NOT solved with a custom method: the
     # JS background loader calls the native Odoo 19 method directly,
-    # product.template.load_product_from_pos(config_id, domain), que devuelve
-    # which returns templates + variants + taxes + attributes in the same shape as
-    # payload inicial (image_128 como bool → URL lazy) y se mergea con el
-    # the native connectNewData expects. That way we reimplement neither the format nor
-    # the merge: when an Odoo 19 upgrade changes the payload shape, the native method
-    # changes with it.
+    # product.template.load_product_from_pos(config_id, domain), which returns
+    # templates + variants + taxes + attributes in the same shape as the initial payload
+    # (image_128 as a bool -> lazy URL) and is merged through the native connectNewData.
+    # That way we reimplement neither the format nor the merge: when an Odoo 19 upgrade
+    # changes the payload shape, the native method changes with it.
 
 
 class PosCategory(models.Model):
     """Load the COMPLETE category hierarchy into the POS.
 
-    Nativo O19: con limit_categories=True, pos.category._load_pos_data_domain
+    Native O19: with limit_categories=True, pos.category._load_pos_data_domain
     returns only iface_available_categ_ids (the 16 configured ones), without their
     ancestors or descendants. The custom vertical tree is then left with no hierarchy
     and looks flat next to the inventory view (product.category).
