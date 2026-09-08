@@ -18,7 +18,7 @@ the native OWL Point of Sale, with no fields added to native models.
     "version": "19.0.1.1.0",
     "category": "Point of Sale",
     "author": "Yagüven C.G.",
-    "website": "https://github.com/GuvensConsultora/yaguven_darakjian_pos_nav",
+    "website": "https://github.com/Darakjian/yaguven_darakjian_pos_nav",
     "license": "LGPL-3",
     # Stock Odoo only: the POS and its framework. No OCA, no third-party modules.
     "depends": ["point_of_sale"],
