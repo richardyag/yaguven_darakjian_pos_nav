@@ -18,10 +18,6 @@
                         t-on-click="() => this.openDarakjianTree()">
                     <i class="fa fa-sitemap me-1"/> Categories
                 </button>
-                <button class="darakjian-tree-toggle btn btn-secondary"
-                        t-on-click="() => this.openDarakjianCasePicker()">
-                    <i class="fa fa-barcode me-1"/> Case / Serial
-                </button>
                 <DarakjianBreadcrumb/>
                 <DarakjianFacetBar/>
             </div>

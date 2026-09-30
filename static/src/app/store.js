@@ -29,8 +29,11 @@ patch(PosStore.prototype, {
         this.darakjianFacets = {};
         // Overlay holding the vertical category tree.
         this.darakjianTreeOpen = false;
-        // Overlay holding the Case/Serial picker.
-        this.darakjianCasePickerOpen = false;
+        // The product template the Case/Serial picker is currently resolving, or null
+        // when closed. Set by ProductScreen.addProductToOrder (see overrides/
+        // product_screen.js) only when that product has more than one unit on hand -
+        // otherwise the native add-to-order flow runs untouched.
+        this.darakjianCasePickerProduct = null;
     },
 
     /** Override of the getter that REALLY feeds the Odoo 19 POS grid.
@@ -88,6 +91,26 @@ patch(PosStore.prototype, {
             const have = productValues[attrId] || [];
             return have.some((vid) => wanted.includes(vid));
         });
+    },
+
+    /** Quants of this product template's own variants - nothing else. Used both to
+     *  decide whether the Case/Serial picker needs to open at all, and by the picker
+     *  itself once it is open (DarakjianCaseSerialPicker.productQuants mirrors this). */
+    darakjianQuantsForTemplate(productTmpl) {
+        const quantModel = this.models["stock.quant"];
+        if (!productTmpl || !quantModel) {
+            return [];
+        }
+        const rel = (v) => (v && v.id !== undefined ? v.id : v);
+        const variantIds = (productTmpl.product_variant_ids || []).map(rel);
+        return quantModel.getAll().filter((q) => variantIds.includes(rel(q.product_id)));
+    },
+
+    /** More than one unit on hand (any mix of cases/serials) is what makes the sale
+     *  ambiguous - anything else (0 or 1) is left to the native add-to-order flow,
+     *  so the common case never sees a new prompt. */
+    darakjianNeedsCasePicker(productTmpl) {
+        return this.darakjianQuantsForTemplate(productTmpl).length > 1;
     },
 
     // --- On-demand loading of non-priority products, category by category -----------

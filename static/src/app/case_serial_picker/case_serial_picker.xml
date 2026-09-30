@@ -2,11 +2,13 @@
 <templates xml:space="preserve">
 
     <t t-name="yaguven_darakjian_pos_nav.CaseSerialPicker">
-        <div class="darakjian-tree-overlay" t-if="pos.darakjianCasePickerOpen">
+        <div class="darakjian-tree-overlay" t-if="isOpen">
             <div class="darakjian-tree-backdrop" t-on-click="() => this.close()"/>
             <div class="darakjian-tree-panel darakjian-case-panel">
                 <div class="darakjian-tree-header">
-                    <span class="darakjian-tree-title">Case / Serial Number</span>
+                    <span class="darakjian-tree-title">
+                        Which piece? <t t-esc="product.display_name"/>
+                    </span>
                     <button class="darakjian-tree-close" t-on-click="() => this.close()">✕</button>
                 </div>
 
@@ -23,9 +25,9 @@
                         <label>Case</label>
                         <select class="form-select"
                                 t-att-disabled="state.caseLockedBySerial"
-                                t-on-change="(ev) => this.selectCase(ev.target.value ? parseInt(ev.target.value) : null)">
+                                t-on-change="(ev) => this.selectCase(ev.target.value)">
                             <option value="">— Select a case —</option>
-                            <t t-foreach="casesWithStock" t-as="c" t-key="c.id">
+                            <t t-foreach="casesForProduct" t-as="c" t-key="c.id">
                                 <option t-att-value="c.id"
                                         t-att-selected="c.id === state.selectedCaseId">
                                     <t t-esc="c.name"/> (<t t-esc="c.count"/>)
@@ -35,29 +37,28 @@
                     </div>
                     <button class="btn btn-link darakjian-case-clear"
                             t-if="state.selectedCaseId or state.serialInput"
-                            t-on-click="() => { this.clearSerial(); this.clearCase(); }">
+                            t-on-click="() => this.clearAll()">
                         Clear
                     </button>
                 </div>
 
                 <div class="darakjian-tree-body darakjian-case-body">
-                    <!-- Live serial search results, while typing and before a case is locked in -->
-                    <t t-if="state.serialInput.trim().length >= 2 and !state.caseLockedBySerial">
-                        <div class="darakjian-case-section-title">Matching serials</div>
-                        <t t-if="!serialMatches.length">
-                            <div class="darakjian-case-empty">No serial matches "<t t-esc="state.serialInput"/>".</div>
+                    <!-- No case picked yet: show every unit of this product, so a serial
+                         can be typed/scanned without having to know its case first. -->
+                    <t t-if="!state.selectedCaseId">
+                        <div class="darakjian-case-section-title">All units on hand</div>
+                        <t t-if="!serialMatches.length and !casesForProduct.length">
+                            <div class="darakjian-case-empty">Nothing on hand right now.</div>
                         </t>
                         <div t-foreach="serialMatches" t-as="item" t-key="item.quantId"
                              class="darakjian-tree-row darakjian-case-row"
                              t-on-click="() => this.pickItem(item)">
-                            <span class="darakjian-case-item-name" t-esc="item.product.display_name"/>
-                            <span class="darakjian-case-item-meta">
-                                SN <t t-esc="item.lotName"/>
-                            </span>
+                            <span class="darakjian-case-item-name">SN <t t-esc="item.lotName"/></span>
                         </div>
+                        <!-- Non-serial units only show up once a case is picked (below) -
+                             without one there is nothing to distinguish them by here. -->
                     </t>
 
-                    <!-- Contents of the selected case (also what a serial match locks into) -->
                     <t t-if="state.selectedCaseId">
                         <div class="darakjian-case-section-title">In this case</div>
                         <t t-if="!itemsInSelectedCase.length">
@@ -66,19 +67,12 @@
                         <div t-foreach="itemsInSelectedCase" t-as="item" t-key="item.quantId"
                              class="darakjian-tree-row darakjian-case-row"
                              t-on-click="() => this.pickItem(item)">
-                            <span class="darakjian-case-item-name" t-esc="item.product.display_name"/>
-                            <span class="darakjian-case-item-meta" t-if="item.lotName">
+                            <span class="darakjian-case-item-name" t-if="item.lotName">
                                 SN <t t-esc="item.lotName"/>
                             </span>
-                            <span class="darakjian-case-item-meta" t-else="">
-                                Qty <t t-esc="item.quantity"/>
+                            <span class="darakjian-case-item-name" t-else="">
+                                Sell this piece (qty <t t-esc="item.quantity"/>)
                             </span>
-                        </div>
-                    </t>
-
-                    <t t-if="!state.selectedCaseId and state.serialInput.trim().length &lt; 2">
-                        <div class="darakjian-case-empty">
-                            Type a serial number, or pick a case, to see what's available.
                         </div>
                     </t>
                 </div>

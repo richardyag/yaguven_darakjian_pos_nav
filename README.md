@@ -58,13 +58,20 @@ of the catalog that only has stock in one case at a time, but for the rest (the 
 product on hand in more than one case) there is no way to say which physical piece was
 actually sold, and no native screen shows the case at all.
 
-A new button, next to "Categories", opens a panel with two linked fields:
+There is no separate button: clicking a product card behaves exactly as before for the
+common case (0 or 1 unit on hand - just gets added). Only when that specific product has
+**more than one unit on hand today** does a panel open instead, scoped to that one
+product, with two linked fields:
 
 * **Serial Number** — typing or scanning a serial that is in stock jumps straight to the
   case it lives in (a serial only exists in one place, so once it is known there is
   nothing left to choose).
-* **Case** — only lists cases that currently have something on hand. Picking one lists
-  what's physically there; items without a serial are sold straight from that case.
+* **Case** — only lists cases that currently hold THIS product. Picking one lists what's
+  physically there; items without a serial are sold straight from that case.
+
+The override lives in `ProductScreen.addProductToOrder` (native:
+`point_of_sale/app/screens/product_screen/product_screen.js`) — see
+`PosStore.darakjianNeedsCasePicker` in `store.js` for the on/off decision.
 
 For serial-tracked products this is mostly a shortcut over what native Odoo can already
 do (`pack_lot_ids` already resolves the correct case from the lot). For non-tracked
@@ -92,12 +99,14 @@ behavior is modified.
 3. The category overlay should show the same tree as **Inventory → Configuration →
    Product Categories**.
 4. Case/Serial picker:
-   - Sell a product that only has stock in one case, as always — nothing should feel
-     different, no new prompt.
-   - Open the picker, type a serial that's on hand — the Case field should lock to the
-     right one automatically.
-   - Open the picker, pick a case with more than one item — only what's really there
-     should be listed, and adding a non-serial item should not ask for one.
+   - Click a product that only has one unit on hand — should add straight to the order,
+     no popup, exactly like before this module existed.
+   - Click a product with more than one unit on hand — the picker should open, scoped to
+     that product's name.
+   - Inside it, type a serial that's on hand — the Case field should lock to the right
+     one automatically.
+   - Pick a case with more than one item instead — only what's really there for that
+     product should be listed, and picking a non-serial item should not ask for one.
    - After the sale, check the resulting delivery in the backend: for an item picked by
      case, the stock move should show that exact case as its source, not the default one
      Odoo would have picked.
