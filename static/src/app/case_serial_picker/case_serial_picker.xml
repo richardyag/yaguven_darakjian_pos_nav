@@ -42,7 +42,7 @@
 
                 <div class="darakjian-tree-body darakjian-case-body">
                     <!-- Live serial search results, while typing and before a case is locked in -->
-                    <t t-if="state.serialInput.trim().length >= 2 and not state.caseLockedBySerial">
+                    <t t-if="state.serialInput.trim().length >= 2 and !state.caseLockedBySerial">
                         <div class="darakjian-case-section-title">Matching serials</div>
                         <t t-if="!serialMatches.length">
                             <div class="darakjian-case-empty">No serial matches "<t t-esc="state.serialInput"/>".</div>
