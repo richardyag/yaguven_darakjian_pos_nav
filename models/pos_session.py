@@ -52,15 +52,20 @@ class PosSession(models.Model):
     def _load_pos_data_models(self, config_id):
         """Add our own models to the session payload.
 
-        BOTH models have to be present in the frontend's pos.models even when no facets
-        are configured: the DarakjianFacetBar component reads
-        this.pos.models["product.attribute.value"] and ["darakjian.pos.facet"]
-        in its `facets` getter. If either is missing, getAll() on undefined crashes the
-        OWL lifecycle and takes the whole POS down. Volume is controlled through the
-        domain (_load_pos_data_domain), never by dropping the model.
+        ALL of these have to be present in the frontend's pos.models even when unused
+        (no facets configured, no case picked yet): the components read
+        this.pos.models["product.attribute.value"], ["darakjian.pos.facet"],
+        ["stock.quant"] and ["stock.location"] directly. If any is missing, getAll() on
+        undefined crashes the OWL lifecycle and takes the whole POS down. Volume is
+        controlled through each model's own _load_pos_data_domain, never by dropping it.
         """
         models_list = super()._load_pos_data_models(config_id)
-        for model in ("darakjian.pos.facet", "product.attribute.value"):
+        for model in (
+            "darakjian.pos.facet",
+            "product.attribute.value",
+            "stock.quant",
+            "stock.location",
+        ):
             if model not in models_list:
                 models_list += [model]
         return models_list
@@ -171,3 +176,48 @@ class ProductProduct(models.Model):
         if "darakjian_facet_values" not in flds:
             flds = list(flds) + ["darakjian_facet_values"]
         return flds
+
+
+class StockLocation(models.Model):
+    """The list of cases, for the Case/Serial picker's Case dropdown.
+
+    Domain kept broad (any internal location) on purpose: which ones actually have
+    stock today is a client-side cross-reference against the stock.quant payload
+    below, not a second server round-trip every time stock moves.
+    """
+
+    _name = "stock.location"
+    _inherit = ["stock.location", "pos.load.mixin"]
+
+    @api.model
+    def _load_pos_data_domain(self, data, config):
+        return [("usage", "=", "internal")]
+
+    @api.model
+    def _load_pos_data_fields(self, config):
+        return ["id", "name", "complete_name"]
+
+
+class StockQuant(models.Model):
+    """On-hand quantities per case, for the Case/Serial picker.
+
+    This is what lets the picker (a) list only cases that actually have something
+    today, and (b) resolve a scanned/typed serial to its case without a server
+    round-trip. Restricted to positive quantities in internal locations - no point
+    shipping the empty rows or the virtual-location noise (Vendors, Customers,
+    Inventory adjustment) to every POS session.
+    """
+
+    _name = "stock.quant"
+    _inherit = ["stock.quant", "pos.load.mixin"]
+
+    @api.model
+    def _load_pos_data_domain(self, data, config):
+        return [
+            ("location_id.usage", "=", "internal"),
+            ("quantity", ">", 0),
+        ]
+
+    @api.model
+    def _load_pos_data_fields(self, config):
+        return ["id", "product_id", "lot_id", "location_id", "quantity"]

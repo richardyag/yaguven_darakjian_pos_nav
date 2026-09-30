@@ -255,6 +255,73 @@ $dk-panel-text: #f3efe6;     // marfil
     }
 }
 
+// ---- Case/Serial picker (reuses the tree overlay/panel/row skeleton above) ----
+.darakjian-case-panel {
+    width: 420px;
+}
+
+.darakjian-case-fields {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(201, 169, 106, 0.25);
+
+    .darakjian-case-field {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: $dk-gold;
+        }
+    }
+
+    .darakjian-case-clear {
+        color: $dk-gold;
+        font-size: 13px;
+        padding: 0 0 6px 0;
+        white-space: nowrap;
+    }
+}
+
+.darakjian-case-body {
+    .darakjian-case-section-title {
+        padding: 10px 18px 4px;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        color: $dk-gold;
+    }
+
+    .darakjian-case-empty {
+        padding: 10px 18px;
+        font-size: 14px;
+        opacity: 0.7;
+    }
+
+    .darakjian-case-row {
+        padding-left: 18px;
+        padding-right: 18px;
+        justify-content: space-between;
+
+        .darakjian-case-item-name {
+            flex: 1 1 auto;
+        }
+
+        .darakjian-case-item-meta {
+            color: $dk-gold;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+    }
+}
+
 // ---- Product card size (+20% wider, +10% taller than the Odoo 19 default) ----
 // O19 POS usa .product-list (grid) y .product (card).
 // Default estimado: minmax(120px, 1fr) / altura ~130px (sin imagen) o ~160px (con imagen).

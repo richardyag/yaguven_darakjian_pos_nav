@@ -15,7 +15,7 @@ Responsive by design: enlarged touch targets on tablet (pointer: coarse) and a d
 view on desktop. All the logic lives inside the module, as inheritance and patches over
 the native OWL Point of Sale, with no fields added to native models.
 """,
-    "version": "19.0.1.1.0",
+    "version": "19.0.1.2.0",
     "category": "Point of Sale",
     "author": "Yagüven C.G.",
     "website": "https://github.com/Darakjian/yaguven_darakjian_pos_nav",
@@ -37,6 +37,8 @@ the native OWL Point of Sale, with no fields added to native models.
             "yaguven_darakjian_pos_nav/static/src/app/facet_bar/facet_bar.xml",
             "yaguven_darakjian_pos_nav/static/src/app/category_tree/category_tree.js",
             "yaguven_darakjian_pos_nav/static/src/app/category_tree/category_tree.xml",
+            "yaguven_darakjian_pos_nav/static/src/app/case_serial_picker/case_serial_picker.js",
+            "yaguven_darakjian_pos_nav/static/src/app/case_serial_picker/case_serial_picker.xml",
             "yaguven_darakjian_pos_nav/static/src/overrides/product_screen.js",
             "yaguven_darakjian_pos_nav/static/src/overrides/payment_screen.js",
             "yaguven_darakjian_pos_nav/static/src/overrides/product_screen.xml",

@@ -9,6 +9,7 @@ import { ProductScreen } from "@point_of_sale/app/screens/product_screen/product
 import { DarakjianFacetBar } from "../app/facet_bar/facet_bar";
 import { DarakjianCategoryTree } from "../app/category_tree/category_tree";
 import { DarakjianBreadcrumb } from "../app/breadcrumb/breadcrumb";
+import { DarakjianCaseSerialPicker } from "../app/case_serial_picker/case_serial_picker";
 
 patch(ProductScreen, {
     components: {
@@ -16,12 +17,16 @@ patch(ProductScreen, {
         DarakjianFacetBar,
         DarakjianCategoryTree,
         DarakjianBreadcrumb,
+        DarakjianCaseSerialPicker,
     },
 });
 
 patch(ProductScreen.prototype, {
     openDarakjianTree() {
         this.pos.darakjianTreeOpen = true;
+    },
+    openDarakjianCasePicker() {
+        this.pos.darakjianCasePickerOpen = true;
     },
     // Facet filtering does NOT belong here: the Odoo 19 grid iterates
     // pos.productToDisplayByCateg -> pos.productsToDisplay, both PosStore getters, and

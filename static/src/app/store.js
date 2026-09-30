@@ -29,6 +29,8 @@ patch(PosStore.prototype, {
         this.darakjianFacets = {};
         // Overlay holding the vertical category tree.
         this.darakjianTreeOpen = false;
+        // Overlay holding the Case/Serial picker.
+        this.darakjianCasePickerOpen = false;
     },
 
     /** Override of the getter that REALLY feeds the Odoo 19 POS grid.

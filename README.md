@@ -9,6 +9,8 @@ Odoo 19 module — **category navigation in the Point of Sale** for Darakjian Je
 * A **vertical category tree** in an overlay, opened on demand, showing the full hierarchy
   without giving up the width of the product grid.
 * A **breadcrumb** so the cashier always knows where in the tree they are standing.
+* A **Case/Serial picker**, so a sale can be tied to the exact physical piece and case it
+  came from — see "Case/Serial picker" below.
 
 Responsive by design: enlarged touch targets on tablet (`pointer: coarse`) and a dense
 view on desktop.
@@ -48,11 +50,39 @@ the module with it.
 Both fall back to the native behavior when nothing is configured, so the POS is never left
 empty.
 
+## Case/Serial picker
+
+Native Odoo reserves stock for a sale silently, against whatever case has the quantity —
+the cashier never sees or chooses which one. That is invisible-but-correct for the ~97%
+of the catalog that only has stock in one case at a time, but for the rest (the same
+product on hand in more than one case) there is no way to say which physical piece was
+actually sold, and no native screen shows the case at all.
+
+A new button, next to "Categories", opens a panel with two linked fields:
+
+* **Serial Number** — typing or scanning a serial that is in stock jumps straight to the
+  case it lives in (a serial only exists in one place, so once it is known there is
+  nothing left to choose).
+* **Case** — only lists cases that currently have something on hand. Picking one lists
+  what's physically there; items without a serial are sold straight from that case.
+
+For serial-tracked products this is mostly a shortcut over what native Odoo can already
+do (`pack_lot_ids` already resolves the correct case from the lot). For non-tracked
+products — most rings, for instance — this is the only way to pin a sale to a specific
+case at all: `models/pos_order_line.py` adds `darakjian_source_location_id` for that,
+and `models/stock_picking.py` overrides `_create_move_from_pos_order_lines` /
+`_prepare_stock_move_vals` (native: `point_of_sale/models/stock_picking.py`) to route
+that line's stock move to the chosen case instead of letting the default reservation
+pick across the whole warehouse.
+
 ## What it depends on
 
-Stock Odoo only: `point_of_sale`. Everything is inheritance and patches over the native
-OWL Point of Sale, with **no fields added to native models** other than the priority flag
-described above.
+Stock Odoo only: `point_of_sale` (which itself depends on `stock`). Everything is
+inheritance and patches over the native OWL Point of Sale. Two things now touch native
+models beyond the `pos_load_priority` flag: `darakjian_source_location_id` on
+`pos.order.line` (see above), and `stock.quant`/`stock.location` gaining the
+`pos.load.mixin` so the picker has data to work with — no other native field or
+behavior is modified.
 
 ## Checking it works
 
@@ -61,5 +91,15 @@ described above.
    Darakjian Facets**. Removing them all should leave the POS working, just without facets.
 3. The category overlay should show the same tree as **Inventory → Configuration →
    Product Categories**.
+4. Case/Serial picker:
+   - Sell a product that only has stock in one case, as always — nothing should feel
+     different, no new prompt.
+   - Open the picker, type a serial that's on hand — the Case field should lock to the
+     right one automatically.
+   - Open the picker, pick a case with more than one item — only what's really there
+     should be listed, and adding a non-serial item should not ask for one.
+   - After the sale, check the resulting delivery in the backend: for an item picked by
+     case, the stock move should show that exact case as its source, not the default one
+     Odoo would have picked.
 
 Yagüven C.G.
