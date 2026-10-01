@@ -84,6 +84,7 @@ class ProductTemplate(models.Model):
                 fields_ = list(fields_) + [field]
         return fields_
 
+    @api.model
     def load_product_from_pos(self, config_id, domain, offset=0, limit=0):
         """Same stock gate as _load_pos_data_domain, applied to the background
         per-category loader AND the native text search ("Search more") - both call
