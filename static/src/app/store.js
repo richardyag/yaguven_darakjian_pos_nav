@@ -192,7 +192,11 @@ patch(PosStore.prototype, {
                 "product.template",
                 "load_product_from_pos",
                 [this.config.id, domain, 0, DK_CATEG_LIMIT],
-                {},
+                // Flags this call (and only this one) for the server's stock gate -
+                // native text search ("Search more") calls the same method without
+                // this context key, and must still find zero-stock products on
+                // purpose (e.g. to quote/follow up on something not on hand).
+                { context: { darakjian_apply_stock_gate: true } },
                 true,   // queue=true: sincroniza con el batch nativo evitando race conditions
                 true,   // loadMissingRecords (trae relacionados faltantes)
             );

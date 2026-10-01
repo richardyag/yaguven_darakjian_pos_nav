@@ -86,18 +86,22 @@ class ProductTemplate(models.Model):
 
     @api.model
     def load_product_from_pos(self, config_id, domain, offset=0, limit=0):
-        """Same stock gate as _load_pos_data_domain, applied to the background
-        per-category loader AND the native text search ("Search more") - both call
+        """Background per-category loader AND native text search ("Search more") call
         this exact method (see store.js darakjianLoadCateg and the native
-        product_screen.js loadProductFromDB), so one override covers both paths.
+        product_screen.js loadProductFromDB) - but only the former should ever hide a
+        zero-stock product. Browsing a category is passive discovery (nothing to show
+        if there is nothing to sell, and it is also what stops a product failing at
+        payment with Odoo's own "cannot take products from a location of type 'view'"
+        error - WWH has no stock to reserve from). Searching by name/SKU is a
+        deliberate lookup - e.g. to quote or follow up on something not on hand today
+        - and must keep finding it.
 
-        Without this, a zero-stock product stays findable by search/category even
-        though selling it fails at payment time with Odoo's own "cannot take products
-        from a location of type 'view'" error (WWH has no stock to reserve from for
-        that product, see Trouble Case / source-location findings in this project).
+        darakjianLoadCateg is the only caller that sets this context key; native
+        search never does, so it is never gated.
         """
-        tmpl_ids, _ = self.env["product.template"]._darakjian_stock_ids()
-        domain = list(domain) + ["|", ("is_storable", "=", False), ("id", "in", tmpl_ids)]
+        if self.env.context.get("darakjian_apply_stock_gate"):
+            tmpl_ids, _ = self.env["product.template"]._darakjian_stock_ids()
+            domain = list(domain) + ["|", ("is_storable", "=", False), ("id", "in", tmpl_ids)]
         return super().load_product_from_pos(config_id, domain, offset, limit)
 
 

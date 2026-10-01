@@ -96,17 +96,24 @@ warehouse root, is a `view` location; the fallback has nowhere real to pull from
 
 `ProductTemplate._darakjian_stock_ids()` answers "what actually has positive stock in
 an internal location right now" with one indexed SQL query (not cached — stock changes
-constantly, a stale answer here is worse than a slower query). It gates three places so
-a zero-stock product is never offered at all, instead of failing late at payment:
+constantly, a stale answer here is worse than a slower query). It gates passive
+discovery, never a deliberate lookup:
 
 * The initial priority payload (`_load_pos_data_domain` on `product.template` and
-  `product.product`).
-* The background per-category loader AND the native text search — both call the same
-  native `load_product_from_pos`, overridden once to cover both.
+  `product.product`) — always gated.
+* The background per-category loader (`store.js` `darakjianLoadCateg`) — gated, via a
+  `darakjian_apply_stock_gate` context key it sets on its own call.
+* The native text search ("Search more") — **never gated**, even though it calls the
+  exact same `load_product_from_pos` method. Browsing a category is passive discovery
+  (nothing to show if there is nothing to sell); searching by name/SKU is a deliberate
+  lookup that must still find a zero-stock product on purpose - e.g. to quote it or
+  follow up on it (see the "sell without stock" proposal). The context key is what
+  tells the two calls apart server-side, since the method itself cannot otherwise know
+  which caller it came from.
 
 Products with `is_storable=False` (services, combos, anything Odoo does not track
-stock for at all) are always exempt — they never have a quant to check in the first
-place, and must stay sellable regardless.
+stock for at all) are always exempt from the gate — they never have a quant to check
+in the first place, and must stay sellable regardless.
 
 ## Stock badge on the product card
 
