@@ -63,14 +63,22 @@ export class DarakjianCaseSerialPicker extends Component {
     }
 
     /** Picking a case IS the whole interaction for a non-tracked product: add it to
-     *  the order with that case forced as the source, and close. */
+     *  the order with that case forced as the source, and close.
+     *
+     *  merge: false is not optional here. Native Odoo merges a new line into an
+     *  existing one of the same product (canBeMergedWith, in pos_order_line.js) based
+     *  on price/discount/note - it has no idea darakjian_source_location_id exists.
+     *  Without this, picking the same product from case A and then from case B
+     *  silently merges into ONE line of qty 2 still pointing at case A, and the
+     *  delivery pulls both units from a case that may only hold one - forced, with no
+     *  warning. Each case pick has to stay its own line. */
     selectCase(caseId) {
         this.pos.addLineToCurrentOrder(
             {
                 product_tmpl_id: this.product,
                 darakjian_source_location_id: Number(caseId),
             },
-            {}
+            { merge: false }
         );
         this.close();
     }
