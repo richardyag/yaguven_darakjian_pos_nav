@@ -29,6 +29,12 @@
         <!-- Remove the native CategorySelector: category navigation happens solely
              through the custom vertical tree. -->
         <xpath expr="//CategorySelector" position="replace"/>
+        <!-- Stock badge: how many units are on hand, right on the card, so a cashier
+             typing a quantity higher than what exists sees a number instead of only
+             the native qty-turns-red feedback after the fact. -->
+        <xpath expr="//ProductCard" position="attributes">
+            <attribute name="darakjianStockQty">pos.darakjianStockQty(product)</attribute>
+        </xpath>
     </t>
 
 </templates>

@@ -113,6 +113,20 @@ patch(PosStore.prototype, {
         return this.darakjianQuantsForTemplate(productTmpl).length > 1;
     },
 
+    /** Total on-hand across every case, for the stock badge on the product card.
+     *  Returns undefined for non-tracked products (services, combos) - they have no
+     *  quants to count and the badge should not show a "0" that reads as "out of
+     *  stock" for something that was never meant to carry inventory. */
+    darakjianStockQty(productTmpl) {
+        if (!productTmpl?.is_storable) {
+            return undefined;
+        }
+        return this.darakjianQuantsForTemplate(productTmpl).reduce(
+            (sum, q) => sum + q.quantity,
+            0
+        );
+    },
+
     // --- On-demand loading of non-priority products, category by category -----------
     // The catalog is NOT preloaded in the background: preloading the ~144 categories,
     // several of them holding thousands of products, saturated the POS sync queue and

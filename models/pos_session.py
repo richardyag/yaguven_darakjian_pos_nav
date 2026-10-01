@@ -71,6 +71,16 @@ class ProductTemplate(models.Model):
         tmpl_ids, _ = self._darakjian_stock_ids()
         return base_domain + ["|", ("is_storable", "=", False), ("id", "in", tmpl_ids)]
 
+    @api.model
+    def _load_pos_data_fields(self, config):
+        """is_storable has to reach the frontend: the stock badge on the product card
+        (store.js darakjianStockQty) uses it to tell "0 in stock" apart from "never
+        tracked" (services), and to skip the count entirely for the latter."""
+        fields_ = super()._load_pos_data_fields(config)
+        if "is_storable" not in fields_:
+            fields_ = list(fields_) + ["is_storable"]
+        return fields_
+
     def load_product_from_pos(self, config_id, domain, offset=0, limit=0):
         """Same stock gate as _load_pos_data_domain, applied to the background
         per-category loader AND the native text search ("Search more") - both call

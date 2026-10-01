@@ -16,6 +16,15 @@
             <attribute name="loading">lazy</attribute>
             <attribute name="decoding">async</attribute>
         </xpath>
+        <!-- Stock badge, opposite corner from the native cart-qty badge (bottom-end)
+             so the two never collide. Shown only for tracked products
+             (darakjianStockQty is undefined for services/combos - see store.js). -->
+        <xpath expr="//article" position="inside">
+            <span t-if="props.darakjianStockQty !== undefined and props.darakjianStockQty !== null"
+                  class="darakjian-stock-badge position-absolute top-0 start-0 m-1 px-2 rounded-pill fw-bolder"
+                  t-att-class="{'darakjian-stock-badge-zero': props.darakjianStockQty &lt;= 0}"
+                  t-esc="props.darakjianStockQty"/>
+        </xpath>
     </t>
 
 </templates>

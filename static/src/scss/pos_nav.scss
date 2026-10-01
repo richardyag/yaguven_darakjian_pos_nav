@@ -365,3 +365,21 @@ $dk-panel-text: #f3efe6;     // marfil
         }
     }
 }
+
+
+// ---- Stock badge on the product card (how many units on hand) ----
+.darakjian-stock-badge {
+    background: $dk-gold;
+    color: $dk-panel-bg;
+    font-size: 12px;
+    line-height: 1.6;
+    min-width: 22px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+    z-index: 1;
+
+    &.darakjian-stock-badge-zero {
+        background: #b23b3b;
+        color: #fff;
+    }
+}

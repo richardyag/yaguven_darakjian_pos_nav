@@ -104,6 +104,19 @@ Products with `is_storable=False` (services, combos, anything Odoo does not trac
 stock for at all) are always exempt — they never have a quant to check in the first
 place, and must stay sellable regardless.
 
+## Stock badge on the product card
+
+A small badge on each card shows the total on hand across every case (the same
+`stock.quant` data the Case/Serial picker already uses) - so typing a quantity higher
+than what exists shows a number to check against, instead of only the native qty-turns-
+red feedback with no indication of how many are actually available. Hidden entirely for
+non-tracked products (`is_storable=False`) - there is nothing meaningful to count there.
+
+Required a prop added to the *native* `ProductCard` component
+(`overrides/product_card.js`), not just the template: OWL validates props strictly, so
+passing `darakjianStockQty` from `product_screen.xml` without declaring it on
+`ProductCard.props` throws "unknown prop" instead of silently working.
+
 ## What it depends on
 
 Stock Odoo only: `point_of_sale` (which itself depends on `stock`). Everything is
