@@ -93,17 +93,49 @@ patch(PosStore.prototype, {
         });
     },
 
+    /** Index of every loaded quant by variant id, rebuilt only when the quant count
+     *  changes (not on every call). The product grid calls darakjianQuantsForTemplate
+     *  once per visible card on every render (needsCasePicker, the stock badge); doing
+     *  a .filter() over every loaded quant each time is an O(cards x quants) scan that
+     *  got noticeably slow once the badge made every card ask. This turns each card's
+     *  lookup into O(its own variant count) instead. */
+    get _darakjianQuantsByVariant() {
+        const quantModel = this.models["stock.quant"];
+        const all = quantModel ? quantModel.getAll() : [];
+        if (this._darakjianQuantIndexLen !== all.length) {
+            const rel = (v) => (v && v.id !== undefined ? v.id : v);
+            const index = new Map();
+            for (const q of all) {
+                const vid = rel(q.product_id);
+                if (!index.has(vid)) {
+                    index.set(vid, []);
+                }
+                index.get(vid).push(q);
+            }
+            this._darakjianQuantIndexCache = index;
+            this._darakjianQuantIndexLen = all.length;
+        }
+        return this._darakjianQuantIndexCache;
+    },
+
     /** Quants of this product template's own variants - nothing else. Used both to
      *  decide whether the Case/Serial picker needs to open at all, and by the picker
      *  itself once it is open (DarakjianCaseSerialPicker.productQuants mirrors this). */
     darakjianQuantsForTemplate(productTmpl) {
-        const quantModel = this.models["stock.quant"];
-        if (!productTmpl || !quantModel) {
+        if (!productTmpl) {
             return [];
         }
         const rel = (v) => (v && v.id !== undefined ? v.id : v);
-        const variantIds = (productTmpl.product_variant_ids || []).map(rel);
-        return quantModel.getAll().filter((q) => variantIds.includes(rel(q.product_id)));
+        const index = this._darakjianQuantsByVariant;
+        const quants = [];
+        for (const variant of productTmpl.product_variant_ids || []) {
+            const vid = rel(variant);
+            const vq = index.get(vid);
+            if (vq) {
+                quants.push(...vq);
+            }
+        }
+        return quants;
     },
 
     /** More than one unit on hand (any mix of cases/serials) is what makes the sale
