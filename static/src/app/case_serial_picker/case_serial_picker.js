@@ -125,7 +125,10 @@ export class DarakjianCaseSerialPicker extends Component {
         if (this.state.caseLockedBySerial) {
             return;
         }
-        this.state.selectedCaseId = caseId || null;
+        // <select> values are always strings; location ids coming out of _rel()
+        // are numbers. Without this cast, itemsInSelectedCase's === comparison
+        // never matches and the case always looks empty.
+        this.state.selectedCaseId = caseId ? Number(caseId) : null;
     }
 
     clearAll() {
