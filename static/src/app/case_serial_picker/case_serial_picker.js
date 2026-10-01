@@ -54,21 +54,26 @@ export class DarakjianCaseSerialPicker extends Component {
         return quantModel.getAll().filter((q) => variantIds.includes(this._rel(q.product_id)));
     }
 
-    /** Cases that hold this product today - not the full case list. */
+    /** Cases that hold this product today - not the full case list.
+     *  count is the actual on-hand QUANTITY in that case, not the number of quant
+     *  rows: a case can hold the same product as two separate quant records (two
+     *  receiving batches that never got merged into one), and counting rows instead
+     *  of summing quantity showed e.g. "Receiving & Sorting (2)" for a case that
+     *  actually holds 55 units (47 in one batch, 8 in another). */
     get casesForProduct() {
         const locModel = this.pos.models["stock.location"];
         if (!locModel) {
             return [];
         }
-        const countByLoc = {};
+        const qtyByLoc = {};
         for (const q of this.productQuants) {
             const locId = this._rel(q.location_id);
-            countByLoc[locId] = (countByLoc[locId] || 0) + 1;
+            qtyByLoc[locId] = (qtyByLoc[locId] || 0) + q.quantity;
         }
         return locModel
             .getAll()
-            .filter((loc) => countByLoc[loc.id])
-            .map((loc) => ({ id: loc.id, name: loc.name, count: countByLoc[loc.id] }))
+            .filter((loc) => qtyByLoc[loc.id])
+            .map((loc) => ({ id: loc.id, name: loc.name, count: qtyByLoc[loc.id] }))
             .sort((a, b) => a.name.localeCompare(b.name));
     }
 
