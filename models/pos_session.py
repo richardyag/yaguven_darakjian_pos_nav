@@ -75,10 +75,13 @@ class ProductTemplate(models.Model):
     def _load_pos_data_fields(self, config):
         """is_storable has to reach the frontend: the stock badge on the product card
         (store.js darakjianStockQty) uses it to tell "0 in stock" apart from "never
-        tracked" (services), and to skip the count entirely for the latter."""
+        tracked" (services), and to skip the count entirely for the latter. tracking
+        is what darakjianNeedsCasePicker uses to stay out of the way of serial/lot
+        tracked products, which native Odoo already handles on its own."""
         fields_ = super()._load_pos_data_fields(config)
-        if "is_storable" not in fields_:
-            fields_ = list(fields_) + ["is_storable"]
+        for field in ("is_storable", "tracking"):
+            if field not in fields_:
+                fields_ = list(fields_) + [field]
         return fields_
 
     def load_product_from_pos(self, config_id, domain, offset=0, limit=0):

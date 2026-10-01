@@ -138,10 +138,15 @@ patch(PosStore.prototype, {
         return quants;
     },
 
-    /** More than one unit on hand (any mix of cases/serials) is what makes the sale
-     *  ambiguous - anything else (0 or 1) is left to the native add-to-order flow,
-     *  so the common case never sees a new prompt. */
+    /** Only for non-tracked products with more than one unit on hand. Serial (and lot)
+     *  tracked products are deliberately excluded: native Odoo already asks for the
+     *  lot/serial on its own and resolves the case from it (pack_lot_ids), so pre-
+     *  picking a serial here only duplicated a prompt the cashier would see again
+     *  right after - removed rather than kept as a redundant shortcut. */
     darakjianNeedsCasePicker(productTmpl) {
+        if (!productTmpl || productTmpl.tracking !== "none") {
+            return false;
+        }
         return this.darakjianQuantsForTemplate(productTmpl).length > 1;
     },
 

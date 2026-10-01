@@ -50,7 +50,7 @@ the module with it.
 Both fall back to the native behavior when nothing is configured, so the POS is never left
 empty.
 
-## Case/Serial picker
+## Case picker
 
 Native Odoo reserves stock for a sale silently, against whatever case has the quantity —
 the cashier never sees or chooses which one. That is invisible-but-correct for the ~97%
@@ -59,25 +59,29 @@ product on hand in more than one case) there is no way to say which physical pie
 actually sold, and no native screen shows the case at all.
 
 There is no separate button: clicking a product card behaves exactly as before for the
-common case (0 or 1 unit on hand - just gets added). Only when that specific product has
-**more than one unit on hand today** does a panel open instead, scoped to that one
-product, with two linked fields:
+common case (0 or 1 unit on hand - just gets added). Only when a **non-tracked**
+product (`tracking="none"`) has **more than one unit on hand today** does a panel open
+instead, scoped to that one product, listing only the cases that currently hold it
+(name + real quantity). Picking one adds the product straight to the order from that
+case - one click is the whole interaction.
 
-* **Serial Number** — typing or scanning a serial that is in stock jumps straight to the
-  case it lives in (a serial only exists in one place, so once it is known there is
-  nothing left to choose).
-* **Case** — only lists cases that currently hold THIS product. Picking one lists what's
-  physically there; items without a serial are sold straight from that case.
+**Serial/lot-tracked products never open this panel, on purpose.** An earlier version
+also let the cashier pre-pick a serial here, which would lock the case the same way a
+native lot selection does - but native Odoo asks for the lot/serial of its own accord
+right after anyway, so that step only duplicated a prompt the cashier would see a
+second time. Dropped rather than kept as a "shortcut": for tracked products, native
+Odoo already resolves the case correctly from the lot via `pack_lot_ids`, with nothing
+of ours involved at all.
 
 The override lives in `ProductScreen.addProductToOrder` (native:
 `point_of_sale/app/screens/product_screen/product_screen.js`) — see
-`PosStore.darakjianNeedsCasePicker` in `store.js` for the on/off decision.
+`PosStore.darakjianNeedsCasePicker` in `store.js` for the on/off decision (non-tracked
+AND more than one unit on hand).
 
-For serial-tracked products this is mostly a shortcut over what native Odoo can already
-do (`pack_lot_ids` already resolves the correct case from the lot). For non-tracked
-products — most rings, for instance — this is the only way to pin a sale to a specific
-case at all: `models/pos_order_line.py` adds `darakjian_source_location_id` for that,
-and `models/stock_picking.py` overrides `_create_move_from_pos_order_lines` /
+For non-tracked products - most rings, for instance - this is the only way to pin a
+sale to a specific case at all, since Odoo has nothing else to go on for them:
+`models/pos_order_line.py` adds `darakjian_source_location_id` for that, and
+`models/stock_picking.py` overrides `_create_move_from_pos_order_lines` /
 `_prepare_stock_move_vals` (native: `point_of_sale/models/stock_picking.py`) to route
 that line's stock move to the chosen case instead of letting the default reservation
 pick across the whole warehouse.
@@ -133,15 +137,14 @@ behavior is modified.
    Darakjian Facets**. Removing them all should leave the POS working, just without facets.
 3. The category overlay should show the same tree as **Inventory → Configuration →
    Product Categories**.
-4. Case/Serial picker:
-   - Click a product that only has one unit on hand — should add straight to the order,
-     no popup, exactly like before this module existed.
-   - Click a product with more than one unit on hand — the picker should open, scoped to
-     that product's name.
-   - Inside it, type a serial that's on hand — the Case field should lock to the right
-     one automatically.
-   - Pick a case with more than one item instead — only what's really there for that
-     product should be listed, and picking a non-serial item should not ask for one.
+4. Case picker:
+   - Click a non-tracked product that only has one unit on hand — should add straight
+     to the order, no popup, exactly like before this module existed.
+   - Click a non-tracked product with more than one unit on hand — the picker should
+     open, scoped to that product's name, listing each case with its real quantity.
+   - Click a serial/lot-tracked product, even with several units on hand across
+     different cases — the picker should NOT open at all; native Odoo's own
+     lot/serial flow takes over.
    - After the sale, check the resulting delivery in the backend: for an item picked by
      case, the stock move should show that exact case as its source, not the default one
      Odoo would have picked.
