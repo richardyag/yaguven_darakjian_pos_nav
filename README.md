@@ -82,6 +82,28 @@ and `models/stock_picking.py` overrides `_create_move_from_pos_order_lines` /
 that line's stock move to the chosen case instead of letting the default reservation
 pick across the whole warehouse.
 
+## Stock gate: only sellable products show up
+
+Native Odoo reserves silently against whatever case has quantity, but when a product
+has **zero stock anywhere**, there is nothing to reserve — the sale still goes through
+the product screen, and only fails at payment, with Odoo's own "you cannot take
+products from or deliver products to a location of type 'view' (WWH)" error (WWH, the
+warehouse root, is a `view` location; the fallback has nowhere real to pull from).
+
+`ProductTemplate._darakjian_stock_ids()` answers "what actually has positive stock in
+an internal location right now" with one indexed SQL query (not cached — stock changes
+constantly, a stale answer here is worse than a slower query). It gates three places so
+a zero-stock product is never offered at all, instead of failing late at payment:
+
+* The initial priority payload (`_load_pos_data_domain` on `product.template` and
+  `product.product`).
+* The background per-category loader AND the native text search — both call the same
+  native `load_product_from_pos`, overridden once to cover both.
+
+Products with `is_storable=False` (services, combos, anything Odoo does not track
+stock for at all) are always exempt — they never have a quant to check in the first
+place, and must stay sellable regardless.
+
 ## What it depends on
 
 Stock Odoo only: `point_of_sale` (which itself depends on `stock`). Everything is

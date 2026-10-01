@@ -26,13 +26,38 @@ class ProductTemplate(models.Model):
     )
 
     @api.model
+    def _darakjian_stock_ids(self):
+        """Templates and variants that currently have positive stock in some internal
+        location - the set of things it is actually possible to sell and deliver today.
+
+        Raw SQL on purpose: this runs on every category load/search, so it has to stay
+        a single indexed query, not an ORM read_group plus Python aggregation. Not
+        ormcache'd - stock changes constantly and a stale "has stock" answer is worse
+        than a slightly slower query (see the Case/Serial picker's quant usage for the
+        same freshness tradeoff).
+        """
+        self.env.cr.execute("""
+            SELECT DISTINCT pp.id, pp.product_tmpl_id
+            FROM stock_quant sq
+            JOIN product_product pp ON pp.id = sq.product_id
+            JOIN stock_location sl ON sl.id = sq.location_id
+            WHERE sl.usage = 'internal' AND sq.quantity > 0
+        """)
+        rows = self.env.cr.fetchall()
+        variant_ids = [r[0] for r in rows]
+        tmpl_ids = list({r[1] for r in rows})
+        return tmpl_ids, variant_ids
+
+    @api.model
     def _load_pos_data_domain(self, data, config):
-        """Initial POS load: only templates with pos_load_priority=True.
+        """Initial POS load: only templates with pos_load_priority=True, and only
+        products that can actually be sold - in stock, or not stock-tracked at all
+        (services, combos: is_storable=False never has a quant and must stay visible).
 
         The Odoo 19 POS grid lists by product.template, so filtering here is what
         actually shrinks the payload and the server-side computation at startup. The
         remaining templates arrive through the background loader, category by category,
-        via the native load_product_from_pos.
+        via the native load_product_from_pos (filtered the same way below).
 
         Fallback: when nothing is flagged as priority (the field has not been set yet),
         it falls back to the native domain so the POS is never left empty.
@@ -41,9 +66,25 @@ class ProductTemplate(models.Model):
         priority_count = self.search_count(
             [("pos_load_priority", "=", True), ("available_in_pos", "=", True)]
         )
-        if priority_count == 0:
-            return base_domain
-        return base_domain + [("pos_load_priority", "=", True)]
+        if priority_count > 0:
+            base_domain = base_domain + [("pos_load_priority", "=", True)]
+        tmpl_ids, _ = self._darakjian_stock_ids()
+        return base_domain + ["|", ("is_storable", "=", False), ("id", "in", tmpl_ids)]
+
+    def load_product_from_pos(self, config_id, domain, offset=0, limit=0):
+        """Same stock gate as _load_pos_data_domain, applied to the background
+        per-category loader AND the native text search ("Search more") - both call
+        this exact method (see store.js darakjianLoadCateg and the native
+        product_screen.js loadProductFromDB), so one override covers both paths.
+
+        Without this, a zero-stock product stays findable by search/category even
+        though selling it fails at payment time with Odoo's own "cannot take products
+        from a location of type 'view'" error (WWH has no stock to reserve from for
+        that product, see Trouble Case / source-location findings in this project).
+        """
+        tmpl_ids, _ = self.env["product.template"]._darakjian_stock_ids()
+        domain = list(domain) + ["|", ("is_storable", "=", False), ("id", "in", tmpl_ids)]
+        return super().load_product_from_pos(config_id, domain, offset, limit)
 
 
 class PosSession(models.Model):
@@ -157,7 +198,9 @@ class ProductProduct(models.Model):
 
     @api.model
     def _load_pos_data_domain(self, data, config):
-        """Startup restriction: only variants with pos_load_priority=True.
+        """Startup restriction: only variants with pos_load_priority=True, and only
+        variants that are in stock or not stock-tracked - same gate as
+        ProductTemplate._load_pos_data_domain, kept in sync with it on purpose.
 
         When none is flagged as priority (the field has not been set yet), it falls back
         to the native domain so the POS is never left empty.
@@ -166,9 +209,12 @@ class ProductProduct(models.Model):
         priority_count = self.env["product.template"].search_count(
             [("pos_load_priority", "=", True), ("available_in_pos", "=", True)]
         )
-        if priority_count == 0:
-            return base_domain
-        return base_domain + [("product_tmpl_id.pos_load_priority", "=", True)]
+        if priority_count > 0:
+            base_domain = base_domain + [("product_tmpl_id.pos_load_priority", "=", True)]
+        _, variant_ids = self.env["product.template"]._darakjian_stock_ids()
+        return base_domain + [
+            "|", ("product_tmpl_id.is_storable", "=", False), ("id", "in", variant_ids)
+        ]
 
     @api.model
     def _load_pos_data_fields(self, config):
