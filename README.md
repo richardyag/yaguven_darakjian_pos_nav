@@ -118,10 +118,17 @@ in the first place, and must stay sellable regardless.
 ## Stock badge on the product card
 
 A small badge on each card shows the total on hand across every case (the same
-`stock.quant` data the Case/Serial picker already uses) - so typing a quantity higher
-than what exists shows a number to check against, instead of only the native qty-turns-
-red feedback with no indication of how many are actually available. Hidden entirely for
-non-tracked products (`is_storable=False`) - there is nothing meaningful to count there.
+`stock.quant` data the Case picker already uses), **minus whatever quantity of that
+product is already in the current ticket** - so adding the same product three times
+from three different cases shows the count going down each time, instead of the same
+original number on every click with nothing warning the cashier they had gone past what
+was really left. Hidden entirely for non-tracked products (`is_storable=False`) - there
+is nothing meaningful to count there.
+
+This can only ever be as fresh as the session's own `stock.quant` snapshot: Odoo never
+re-fetches stock from the server after a sale (by design, so the POS keeps working
+offline), so the badge will not reflect a sale from earlier in the same session once
+that ticket is paid and gone - only a new session re-reads real stock.
 
 Required a prop added to the *native* `ProductCard` component
 (`overrides/product_card.js`), not just the template: OWL validates props strictly, so

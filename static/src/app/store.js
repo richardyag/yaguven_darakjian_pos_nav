@@ -150,18 +150,35 @@ patch(PosStore.prototype, {
         return this.darakjianQuantsForTemplate(productTmpl).length > 1;
     },
 
-    /** Total on-hand across every case, for the stock badge on the product card.
-     *  Returns undefined for non-tracked products (services, combos) - they have no
-     *  quants to count and the badge should not show a "0" that reads as "out of
-     *  stock" for something that was never meant to carry inventory. */
+    /** On-hand across every case, MINUS what is already in the current ticket, for the
+     *  stock badge on the product card. Returns undefined for non-tracked products
+     *  (services, combos) - they have no quants to count and the badge should not show
+     *  a "0" that reads as "out of stock" for something that was never meant to carry
+     *  inventory.
+     *
+     *  Odoo never re-fetches stock.quant from the server after a sale (by design - the
+     *  POS has to keep working offline), so this can only ever reflect what the
+     *  session loaded at open/last background refresh. Subtracting the current order's
+     *  own lines is what keeps the number honest WITHIN one ticket: without it, adding
+     *  the same product three times from three different cases still showed the
+     *  original on-hand count on every click, with nothing warning the cashier they
+     *  were past what was really left. */
     darakjianStockQty(productTmpl) {
         if (!productTmpl?.is_storable) {
             return undefined;
         }
-        return this.darakjianQuantsForTemplate(productTmpl).reduce(
+        const onHand = this.darakjianQuantsForTemplate(productTmpl).reduce(
             (sum, q) => sum + q.quantity,
             0
         );
+        const order = this.getOrder();
+        const inTicket = order
+            ? order
+                  .getOrderlines()
+                  .filter((line) => line.getProduct()?.product_tmpl_id?.id === productTmpl.id)
+                  .reduce((sum, line) => sum + line.getQuantity(), 0)
+            : 0;
+        return onHand - inTicket;
     },
 
     // --- On-demand loading of non-priority products, category by category -----------
