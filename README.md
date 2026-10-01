@@ -115,11 +115,24 @@ Products with `is_storable=False` (services, combos, anything Odoo does not trac
 stock for at all) are always exempt from the gate — they never have a quant to check
 in the first place, and must stay sellable regardless.
 
+## Available vs. on-hand
+
+`stock.quant.quantity` is everything physically in a case; `reserved_quantity` is the
+slice of it some OTHER order already has a claim on (even a stuck, unrelated one - see
+the leftover Sale Order deliveries found pointing at the invalid `view` location and
+cleaned up on 2026-10-01). `PosStore.darakjianAvailableQty(quant)` is
+`quantity - reserved_quantity`: what is genuinely free to sell right now. The stock
+badge and the Case picker's dropdown both use this, not raw on-hand - showing raw
+on-hand as if it were free is exactly how a case with "1 unit" can still fail at
+payment with Odoo's own "cannot take products from a location of type 'view'" error,
+because reservation finds nothing actually left there.
+
 ## Stock badge on the product card
 
-A small badge on each card shows the total on hand across every case (the same
-`stock.quant` data the Case picker already uses), **minus whatever quantity of that
-product is already in the current ticket** - so adding the same product three times
+A small badge on each card shows the **available** quantity across every case (on hand
+minus whatever is already reserved by any other order - see "Available vs. on-hand"
+below; the same `stock.quant` data the Case picker already uses), **minus whatever
+quantity of that product is already in the current ticket** - so adding the same product three times
 from three different cases shows the count going down each time, instead of the same
 original number on every click with nothing warning the cashier they had gone past what
 was really left. Hidden entirely for non-tracked products (`is_storable=False`) - there

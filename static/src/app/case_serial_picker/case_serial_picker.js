@@ -44,7 +44,11 @@ export class DarakjianCaseSerialPicker extends Component {
 
     /** Cases that hold this product today, with the real on-hand quantity in each
      *  (sum of quantity, not a count of quant rows - a case can hold the same product
-     *  across more than one quant record). */
+     *  across more than one quant record). Uses AVAILABLE quantity (on hand minus
+     *  reserved by any other order), not raw on-hand - a case can show 1 unit on hand
+     *  while something else already reserved it, and offering it as pickable here
+     *  leads straight to Odoo's "cannot take products from a location of type 'view'"
+     *  error once reservation finds nothing actually free there. */
     get casesForProduct() {
         const locModel = this.pos.models["stock.location"];
         if (!locModel || !this.product) {
@@ -53,11 +57,11 @@ export class DarakjianCaseSerialPicker extends Component {
         const qtyByLoc = {};
         for (const q of this.productQuants) {
             const locId = this._rel(q.location_id);
-            qtyByLoc[locId] = (qtyByLoc[locId] || 0) + q.quantity;
+            qtyByLoc[locId] = (qtyByLoc[locId] || 0) + this.pos.darakjianAvailableQty(q);
         }
         return locModel
             .getAll()
-            .filter((loc) => qtyByLoc[loc.id])
+            .filter((loc) => qtyByLoc[loc.id] > 0)
             .map((loc) => ({ id: loc.id, name: loc.name, count: qtyByLoc[loc.id] }))
             .sort((a, b) => a.name.localeCompare(b.name));
     }

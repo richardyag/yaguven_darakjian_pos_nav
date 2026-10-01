@@ -315,4 +315,10 @@ class StockQuant(models.Model):
 
     @api.model
     def _load_pos_data_fields(self, config):
-        return ["id", "product_id", "lot_id", "location_id", "quantity"]
+        # reserved_quantity has to reach the frontend: the stock badge and the Case
+        # picker both need "available" (quantity - reserved_quantity), not raw
+        # on-hand - a case can show 1 unit on hand while another order (even an
+        # unrelated, stuck one) already has it reserved, and offering it as sellable
+        # leads straight to the same "cannot take products from a location of type
+        # view" error once reservation finds nothing actually free.
+        return ["id", "product_id", "lot_id", "location_id", "quantity", "reserved_quantity"]

@@ -93,6 +93,16 @@ patch(PosStore.prototype, {
         });
     },
 
+    /** On-hand minus reserved: what is genuinely free to sell from this quant right
+     *  now. A quant can show 1 unit on hand while another order already reserved it
+     *  (even an unrelated, stuck one, like the leftover Sale Order deliveries found
+     *  and cleaned up on 2026-10-01) - offering raw on-hand as if it were free leads
+     *  straight to Odoo's "cannot take products from a location of type 'view'" error
+     *  once reservation finds nothing actually available there. */
+    darakjianAvailableQty(quant) {
+        return quant.quantity - (quant.reserved_quantity || 0);
+    },
+
     /** Index of every loaded quant by variant id, rebuilt only when the quant count
      *  changes (not on every call). The product grid calls darakjianQuantsForTemplate
      *  once per visible card on every render (needsCasePicker, the stock badge); doing
@@ -168,7 +178,7 @@ patch(PosStore.prototype, {
             return undefined;
         }
         const onHand = this.darakjianQuantsForTemplate(productTmpl).reduce(
-            (sum, q) => sum + q.quantity,
+            (sum, q) => sum + this.darakjianAvailableQty(q),
             0
         );
         const order = this.getOrder();
@@ -283,10 +293,16 @@ patch(PosStore.prototype, {
             return;
         }
         const ids = localQuants.map((q) => q.id);
-        const fresh = await this.data.orm.read("stock.quant", ids, ["quantity"]);
-        const freshById = new Map(fresh.map((r) => [r.id, r.quantity]));
+        const fresh = await this.data.orm.read(
+            "stock.quant",
+            ids,
+            ["quantity", "reserved_quantity"]
+        );
+        const freshById = new Map(fresh.map((r) => [r.id, r]));
         for (const q of localQuants) {
-            q.quantity = freshById.has(q.id) ? freshById.get(q.id) : 0;
+            const row = freshById.get(q.id);
+            q.quantity = row ? row.quantity : 0;
+            q.reserved_quantity = row ? row.reserved_quantity : 0;
         }
     },
 });
