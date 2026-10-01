@@ -125,10 +125,15 @@ original number on every click with nothing warning the cashier they had gone pa
 was really left. Hidden entirely for non-tracked products (`is_storable=False`) - there
 is nothing meaningful to count there.
 
-This can only ever be as fresh as the session's own `stock.quant` snapshot: Odoo never
-re-fetches stock from the server after a sale (by design, so the POS keeps working
-offline), so the badge will not reflect a sale from earlier in the same session once
-that ticket is paid and gone - only a new session re-reads real stock.
+Odoo never re-fetches stock from the server after a sale by default (by design, so the
+POS keeps working offline) - without more, the badge would freeze at the session's
+opening snapshot forever. `PosStore.postSyncAllOrders` (native, empty by default) is
+the hook: right after an order is confirmed server-side, `darakjianRefreshStockAfterSync`
+re-reads just the quant ROWS already known locally for whatever products were in that
+order, and corrects their `quantity` in place (0 if the row was fully depleted and
+removed server-side). Scoped to what was actually sold, not a full reload - and
+intentionally does not try to discover stock in a case never seen before, since a sale
+cannot create stock, only consume it.
 
 Required a prop added to the *native* `ProductCard` component
 (`overrides/product_card.js`), not just the template: OWL validates props strictly, so

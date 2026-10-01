@@ -238,4 +238,55 @@ patch(PosStore.prototype, {
         super.setSelectedCategory(categoryId);
         this.darakjianEnsureCategLoaded(categoryId);
     },
+
+    /** Native hook, empty by default (point_of_sale/app/services/pos_store.js), called
+     *  right after an order is confirmed server-side. The stock badge would otherwise
+     *  keep showing the session's original on-hand count forever - Odoo never
+     *  re-fetches stock after a sale, by design, so the POS can keep working offline -
+     *  so this re-reads just the quant ROWS already known locally for whatever
+     *  products were in the order that was just synced, instead of a full reload.
+     *  New quants in a case never seen before are out of scope on purpose: a sale
+     *  cannot create stock, only consume it, so there is never a new row to add here -
+     *  only existing ones to correct or zero out. */
+    async postSyncAllOrders(orders) {
+        const result = await super.postSyncAllOrders(...arguments);
+        try {
+            await this.darakjianRefreshStockAfterSync(orders);
+        } catch (e) {
+            console.warn("[Darakjian] stock refresh after sale failed:", e);
+        }
+        return result;
+    },
+
+    async darakjianRefreshStockAfterSync(orders) {
+        const quantModel = this.models["stock.quant"];
+        if (!quantModel || !orders?.length) {
+            return;
+        }
+        const rel = (v) => (v && v.id !== undefined ? v.id : v);
+        const variantIds = new Set();
+        for (const order of orders) {
+            for (const line of order.lines || []) {
+                const variant = line.product_id;
+                if (variant) {
+                    variantIds.add(rel(variant));
+                }
+            }
+        }
+        if (!variantIds.size) {
+            return;
+        }
+        const localQuants = quantModel
+            .getAll()
+            .filter((q) => variantIds.has(rel(q.product_id)));
+        if (!localQuants.length) {
+            return;
+        }
+        const ids = localQuants.map((q) => q.id);
+        const fresh = await this.data.orm.read("stock.quant", ids, ["quantity"]);
+        const freshById = new Map(fresh.map((r) => [r.id, r.quantity]));
+        for (const q of localQuants) {
+            q.quantity = freshById.has(q.id) ? freshById.get(q.id) : 0;
+        }
+    },
 });
