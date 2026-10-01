@@ -116,6 +116,7 @@ class PosSession(models.Model):
             "product.attribute.value",
             "stock.quant",
             "stock.location",
+            "stock.lot",
         ):
             if model not in models_list:
                 models_list += [model]
@@ -252,6 +253,36 @@ class StockLocation(models.Model):
     @api.model
     def _load_pos_data_fields(self, config):
         return ["id", "name", "complete_name"]
+
+
+class StockLot(models.Model):
+    """Serial/lot names, for the Case/Serial picker's serial rows and search.
+
+    Without this, item.lot_id on the frontend stays an unresolved id with no .name -
+    the picker's rows showed "SN" with nothing after it, because stock.lot was never
+    registered as a pos.load.mixin model even though stock.quant.lot_id points to it.
+    Scoped to lots that are actually in an on-hand quant right now - same restriction
+    as StockQuant's own domain below, so the payload stays proportional to what the
+    picker can actually show, not the whole lot history of the warehouse.
+    """
+
+    _name = "stock.lot"
+    _inherit = ["stock.lot", "pos.load.mixin"]
+
+    @api.model
+    def _load_pos_data_domain(self, data, config):
+        self.env.cr.execute("""
+            SELECT DISTINCT sq.lot_id
+            FROM stock_quant sq
+            JOIN stock_location sl ON sl.id = sq.location_id
+            WHERE sl.usage = 'internal' AND sq.quantity > 0 AND sq.lot_id IS NOT NULL
+        """)
+        lot_ids = [row[0] for row in self.env.cr.fetchall()]
+        return [("id", "in", lot_ids)]
+
+    @api.model
+    def _load_pos_data_fields(self, config):
+        return ["id", "name"]
 
 
 class StockQuant(models.Model):
