@@ -153,6 +153,21 @@ Required a prop added to the *native* `ProductCard` component
 passing `darakjianStockQty` from `product_screen.xml` without declaring it on
 `ProductCard.props` throws "unknown prop" instead of silently working.
 
+## Salesperson on the invoice: PIN cashier, not session login
+
+Native Odoo attributes a POS order's invoice to `pos.order.user_id` - the login that
+owns the register SESSION - never to the employee selected by PIN. In a store with one
+real login (Administrator) and everyone else working by PIN, every invoice ended up
+attributed to Administrator regardless of who actually rang it up, which silently broke
+per-salesperson commission tracking (`yaguven_darakjian_comisiones` keys off exactly
+this field).
+
+`PosOrder._prepare_invoice_vals()` is overridden to use the PIN employee's linked
+`res.users` when there is one (Janel, Armen, as of 2026-10-01) - falling back to the
+session owner for everyone else, same as before. Kept here rather than in the
+commissions module on purpose: that module is documented as a read-only datasource
+over native models, and this changes how a native model (`pos.order`) actually behaves.
+
 ## What it depends on
 
 Stock Odoo only: `point_of_sale` (which itself depends on `stock`). Everything is
