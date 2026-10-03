@@ -15,16 +15,17 @@ Responsive by design: enlarged touch targets on tablet (pointer: coarse) and a d
 view on desktop. All the logic lives inside the module, as inheritance and patches over
 the native OWL Point of Sale, with no fields added to native models.
 """,
-    "version": "19.0.1.11.0",
+    "version": "19.0.1.12.0",
     "category": "Point of Sale",
     "author": "Yagüven C.G.",
     "website": "https://github.com/Darakjian/yaguven_darakjian_pos_nav",
     "license": "LGPL-3",
     # Stock Odoo only: the POS and its framework. No OCA, no third-party modules.
-    "depends": ["point_of_sale"],
+    "depends": ["point_of_sale", "account"],
     "data": [
         "security/ir.model.access.csv",
         "views/darakjian_pos_facet_views.xml",
+        "views/account_move_report.xml",
     ],
     # OWL components injected into the POS bundle.
     "assets": {
@@ -41,6 +42,7 @@ the native OWL Point of Sale, with no fields added to native models.
             "yaguven_darakjian_pos_nav/static/src/app/case_serial_picker/case_serial_picker.xml",
             "yaguven_darakjian_pos_nav/static/src/overrides/product_screen.js",
             "yaguven_darakjian_pos_nav/static/src/overrides/payment_screen.js",
+            "yaguven_darakjian_pos_nav/static/src/overrides/pos_order.js",
             "yaguven_darakjian_pos_nav/static/src/overrides/product_screen.xml",
             "yaguven_darakjian_pos_nav/static/src/overrides/product_card.js",
             "yaguven_darakjian_pos_nav/static/src/overrides/product_card.xml",

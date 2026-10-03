@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Simplifies the printed customer invoice: lists each line's serial numbers
+         plainly underneath it (instead of standard Odoo's separate "Product /
+         Quantity / SN-LN" table, which lumps every serial on the invoice together
+         with no way to tell which line each belongs to), and drops the bank
+         account / payment communication block the client does not want printed
+         on an invoice that goes to a customer. -->
+    <template id="report_invoice_document_darakjian"
+              inherit_id="account.report_invoice_document">
+
+        <xpath expr="//td[@name='account_invoice_line_name']" position="inside">
+            <t t-set="darakjian_serials" t-value="line._darakjian_invoice_serials()"/>
+            <div t-if="darakjian_serials" class="text-muted small">
+                <t t-esc="', '.join(darakjian_serials)"/>
+            </div>
+        </xpath>
+
+        <xpath expr="//p[@name='payment_communication']/.." position="replace"/>
+
+    </template>
+
+</odoo>
