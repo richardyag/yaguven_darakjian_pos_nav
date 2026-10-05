@@ -12,9 +12,9 @@
 
         <xpath expr="//td[@name='account_invoice_line_name']" position="inside">
             <t t-set="darakjian_serials" t-value="line._darakjian_invoice_serials()"/>
-            <div t-if="darakjian_serials" class="text-muted small">
-                <t t-esc="', '.join(darakjian_serials)"/>
-            </div>
+            <t t-if="darakjian_serials" t-foreach="darakjian_serials" t-as="darakjian_serial">
+                <div class="text-muted small"><t t-esc="darakjian_serial"/></div>
+            </t>
         </xpath>
 
         <xpath expr="//p[@name='payment_communication']/.." position="replace"/>
