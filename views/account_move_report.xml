@@ -4,9 +4,12 @@
     <!-- Simplifies the printed customer invoice: lists each line's serial numbers
          plainly underneath it (instead of standard Odoo's separate "Product /
          Quantity / SN-LN" table, which lumps every serial on the invoice together
-         with no way to tell which line each belongs to), and drops the bank
+         with no way to tell which line each belongs to), and hides the bank
          account / payment communication block the client does not want printed
-         on an invoice that goes to a customer. -->
+         on an invoice that goes to a customer. Hidden via CSS (d-none), not removed
+         from the DOM: structurally removing it (position="replace") broke module
+         loading - some other inherited view still expects to find an element inside
+         it (o.partner_bank_id) and fails when it is gone. -->
     <template id="report_invoice_document_darakjian"
               inherit_id="account.report_invoice_document">
 
@@ -17,7 +20,9 @@
             </t>
         </xpath>
 
-        <xpath expr="//p[@name='payment_communication']/.." position="replace"/>
+        <xpath expr="//p[@name='payment_communication']/.." position="attributes">
+            <attribute name="class" add="d-none" separator=" "/>
+        </xpath>
 
     </template>
 
