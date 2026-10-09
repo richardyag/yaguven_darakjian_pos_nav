@@ -249,6 +249,34 @@ patch(PosStore.prototype, {
         this.darakjianEnsureCategLoaded(categoryId);
     },
 
+    // --- Full-catalog text search, independent of the per-category cap -------------
+    // Found in production on 2026-10-09: 915 products across 24 categories sit past
+    // DK_CATEG_LIMIT on their own category and were unreachable even after the
+    // cashier opened that exact category - darakjianLoadCateg only ever fetches the
+    // first DK_CATEG_LIMIT rows (no pagination), so anything beyond that position
+    // never loads no matter how many times the category is reopened. Native
+    // "Search more" is documented above to call load_product_from_pos the same way,
+    // with no category/priority restriction - that should have been the escape hatch,
+    // but it was not reliably surfacing these products live. Rather than chase that
+    // further on a system taking real sales, this adds our own guaranteed path: a
+    // name/code domain has no volume risk (it matches a handful of rows, never
+    // thousands), so it does not need a cap at all.
+    async darakjianSearchFullCatalog(query) {
+        const q = (query || "").trim();
+        if (!q) {
+            return;
+        }
+        const domain = ["|", ["name", "ilike", q], ["default_code", "ilike", q]];
+        await this.data.callRelated(
+            "product.template",
+            "load_product_from_pos",
+            [this.config.id, domain, 0, 40],
+            {},
+            true,   // queue=true: sincroniza con el batch nativo evitando race conditions
+            true,   // loadMissingRecords (trae relacionados faltantes)
+        );
+    },
+
     /** Native hook, empty by default (point_of_sale/app/services/pos_store.js), called
      *  right after an order is confirmed server-side. The stock badge would otherwise
      *  keep showing the session's original on-hand count forever - Odoo never
