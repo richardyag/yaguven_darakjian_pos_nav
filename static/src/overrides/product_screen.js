@@ -42,4 +42,14 @@ patch(ProductScreen.prototype, {
         }
         return super.addProductToOrder(product);
     },
+
+    /** Dedicated full-catalog search, bypassing the per-category load cap entirely
+     *  (see darakjianSearchFullCatalog in store.js for why this exists). Enter-only,
+     *  same interaction pattern as a normal search box. */
+    darakjianSearchCatalog(ev) {
+        if (ev.key !== "Enter") {
+            return;
+        }
+        this.pos.darakjianSearchFullCatalog(ev.target.value);
+    },
 });

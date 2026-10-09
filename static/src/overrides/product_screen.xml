@@ -20,6 +20,9 @@
                 </button>
                 <DarakjianBreadcrumb/>
                 <DarakjianFacetBar/>
+                <input type="text" class="darakjian-search-input form-control form-control-sm"
+                       placeholder="Buscar en todo el catalogo (Enter)..."
+                       t-on-keyup="(ev) => this.darakjianSearchCatalog(ev)"/>
             </div>
         </xpath>
         <xpath expr="//CategorySelector" position="after">
