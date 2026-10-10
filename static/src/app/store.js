@@ -264,10 +264,10 @@ patch(PosStore.prototype, {
     async darakjianSearchFullCatalog(query) {
         const q = (query || "").trim();
         if (!q) {
-            return;
+            return 0;
         }
         const domain = ["|", ["name", "ilike", q], ["default_code", "ilike", q]];
-        await this.data.callRelated(
+        const result = await this.data.callRelated(
             "product.template",
             "load_product_from_pos",
             [this.config.id, domain, 0, 40],
@@ -275,6 +275,12 @@ patch(PosStore.prototype, {
             true,   // queue=true: sincroniza con el batch nativo evitando race conditions
             true,   // loadMissingRecords (trae relacionados faltantes)
         );
+        // callRelated's return shape mirrors the native payload: an object keyed by
+        // model name, each a list of records merged this round - counting the
+        // product.template entries is what actually answers "did this find anything",
+        // which darakjianSearchCatalog surfaces directly instead of staying silent.
+        const tmplList = result && result["product.template"];
+        return Array.isArray(tmplList) ? tmplList.length : 0;
     },
 
     /** Native hook, empty by default (point_of_sale/app/services/pos_store.js), called
