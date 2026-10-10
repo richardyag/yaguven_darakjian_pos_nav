@@ -50,24 +50,28 @@ patch(ProductScreen.prototype, {
      *  whole product grid up every keystroke (confirmed in production, 2026-10-09) -
      *  prompt() runs as a browser-native modal outside the page's own layout flow, so
      *  it cannot trigger that reflow. */
+    /** Dedicated full-catalog search, bypassing the per-category DK_CATEG_LIMIT cap
+     *  entirely (see store.js darakjianLoadCateg for why that cap exists and why it
+     *  cannot just be raised). Built on the SAME pieces native "Search more" uses
+     *  (point_of_sale/app/screens/product_screen/product_screen.js,
+     *  loadProductFromDBDomain + pos.loadNewProducts) rather than a hand-rolled
+     *  version - two earlier attempts here got it subtly wrong: counting
+     *  result["product.template"] (the payload keys variants under
+     *  "product.product", confirmed 2026-10-10 - production kept reporting the
+     *  40-row limit itself instead of real matches), and clearing the category via
+     *  `pos.selectedCategory = null` instead of the native `setSelectedCategory(0)`,
+     *  which is the actual sentinel the grid's filtering logic expects for "no
+     *  category restriction". */
     async darakjianSearchCatalog() {
         const query = window.prompt("Buscar en todo el catalogo:");
         if (!query) {
             return;
         }
         try {
-            const found = await this.pos.darakjianSearchFullCatalog(query);
-            // Loading a template into pos.models does not make it visible on its own -
-            // the grid (productsToDisplay) still filters by whatever category is
-            // selected (DarakjianCategoryTree seeds one on mount so the POS never opens
-            // showing the full catalog at once). A cross-category name/code search has
-            // to clear that selection, the same way DarakjianCategoryTree.clearCategory
-            // does, or the newly loaded matches stay invisible in categories other than
-            // the one currently selected - confirmed in production, 2026-10-10 (40
-            // found, only 8 shown, all in the selected category).
-            if (found > 0) {
-                this.pos.selectedCategory = null;
-            }
+            this.pos.setSelectedCategory(0);
+            const domain = this.loadProductFromDBDomain(query);
+            const result = await this.pos.loadNewProducts(domain, 0, 40);
+            const found = (result["product.product"] || []).length;
             window.alert(`Busqueda completa: ${found} producto(s) encontrado(s) para "${query}".`);
         } catch (e) {
             window.alert(`Error al buscar: ${e && e.message ? e.message : e}`);
