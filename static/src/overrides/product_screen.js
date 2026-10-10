@@ -52,8 +52,15 @@ patch(ProductScreen.prototype, {
      *  it cannot trigger that reflow. */
     async darakjianSearchCatalog() {
         const query = window.prompt("Buscar en todo el catalogo:");
-        if (query) {
-            await this.pos.darakjianSearchFullCatalog(query);
+        if (!query) {
+            return;
+        }
+        try {
+            const found = await this.pos.darakjianSearchFullCatalog(query);
+            window.alert(`Busqueda completa: ${found} producto(s) encontrado(s) para "${query}".`);
+        } catch (e) {
+            window.alert(`Error al buscar: ${e && e.message ? e.message : e}`);
+            console.error("[Darakjian] darakjianSearchCatalog failed:", e);
         }
     },
 });
