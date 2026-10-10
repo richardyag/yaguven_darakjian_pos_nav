@@ -44,12 +44,16 @@ patch(ProductScreen.prototype, {
     },
 
     /** Dedicated full-catalog search, bypassing the per-category load cap entirely
-     *  (see darakjianSearchFullCatalog in store.js for why this exists). Enter-only,
-     *  same interaction pattern as a normal search box. */
-    darakjianSearchCatalog(ev) {
-        if (ev.key !== "Enter") {
-            return;
+     *  (see darakjianSearchFullCatalog in store.js for why this exists). A native
+     *  prompt() instead of an inline text input on purpose: the first version added a
+     *  permanent text field to the toolbar and on touchscreens, focusing it pushed the
+     *  whole product grid up every keystroke (confirmed in production, 2026-10-09) -
+     *  prompt() runs as a browser-native modal outside the page's own layout flow, so
+     *  it cannot trigger that reflow. */
+    async darakjianSearchCatalog() {
+        const query = window.prompt("Buscar en todo el catalogo:");
+        if (query) {
+            await this.pos.darakjianSearchFullCatalog(query);
         }
-        this.pos.darakjianSearchFullCatalog(ev.target.value);
     },
 });
