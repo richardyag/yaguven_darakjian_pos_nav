@@ -254,34 +254,17 @@ patch(PosStore.prototype, {
     // DK_CATEG_LIMIT on their own category and were unreachable even after the
     // cashier opened that exact category - darakjianLoadCateg only ever fetches the
     // first DK_CATEG_LIMIT rows (no pagination), so anything beyond that position
-    // never loads no matter how many times the category is reopened. Native
-    // "Search more" is documented above to call load_product_from_pos the same way,
-    // with no category/priority restriction - that should have been the escape hatch,
-    // but it was not reliably surfacing these products live. Rather than chase that
-    // further on a system taking real sales, this adds our own guaranteed path: a
-    // name/code domain has no volume risk (it matches a handful of rows, never
-    // thousands), so it does not need a cap at all.
-    async darakjianSearchFullCatalog(query) {
-        const q = (query || "").trim();
-        if (!q) {
-            return 0;
-        }
-        const domain = ["|", ["name", "ilike", q], ["default_code", "ilike", q]];
-        const result = await this.data.callRelated(
-            "product.template",
-            "load_product_from_pos",
-            [this.config.id, domain, 0, 40],
-            {},
-            true,   // queue=true: sincroniza con el batch nativo evitando race conditions
-            true,   // loadMissingRecords (trae relacionados faltantes)
-        );
-        // callRelated's return shape mirrors the native payload: an object keyed by
-        // model name, each a list of records merged this round - counting the
-        // product.template entries is what actually answers "did this find anything",
-        // which darakjianSearchCatalog surfaces directly instead of staying silent.
-        const tmplList = result && result["product.template"];
-        return Array.isArray(tmplList) ? tmplList.length : 0;
-    },
+    // never loads no matter how many times the category is reopened.
+    //
+    // This is now built directly on the native pieces instead of a custom method
+    // here - see overrides/product_screen.js darakjianSearchCatalog, which calls
+    // pos.loadNewProducts with the native loadProductFromDBDomain. An earlier version
+    // lived here as darakjianSearchFullCatalog but miscounted results (checked
+    // result["product.template"] when variants come back under "product.product")
+    // and used `pos.selectedCategory = null` instead of the native
+    // `setSelectedCategory(0)` sentinel the grid actually filters on - both
+    // confirmed wrong against production traffic, 2026-10-10. Removed rather than
+    // left as a second, diverging implementation of the same thing.
 
     /** Native hook, empty by default (point_of_sale/app/services/pos_store.js), called
      *  right after an order is confirmed server-side. The stock badge would otherwise
