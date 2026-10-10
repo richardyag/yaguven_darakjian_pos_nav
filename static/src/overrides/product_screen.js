@@ -57,6 +57,17 @@ patch(ProductScreen.prototype, {
         }
         try {
             const found = await this.pos.darakjianSearchFullCatalog(query);
+            // Loading a template into pos.models does not make it visible on its own -
+            // the grid (productsToDisplay) still filters by whatever category is
+            // selected (DarakjianCategoryTree seeds one on mount so the POS never opens
+            // showing the full catalog at once). A cross-category name/code search has
+            // to clear that selection, the same way DarakjianCategoryTree.clearCategory
+            // does, or the newly loaded matches stay invisible in categories other than
+            // the one currently selected - confirmed in production, 2026-10-10 (40
+            // found, only 8 shown, all in the selected category).
+            if (found > 0) {
+                this.pos.selectedCategory = null;
+            }
             window.alert(`Busqueda completa: ${found} producto(s) encontrado(s) para "${query}".`);
         } catch (e) {
             window.alert(`Error al buscar: ${e && e.message ? e.message : e}`);
