@@ -20,7 +20,13 @@
                 </button>
                 <DarakjianBreadcrumb/>
                 <DarakjianFacetBar/>
-                <button class="darakjian-search-full btn btn-secondary"
+                <!-- Hidden 2026-10-18: redundant with native "Search more", which already
+                     reaches the full catalog beyond the per-category load cap (see
+                     darakjianLoadCateg in store.js). Kept in the DOM, not deleted - the
+                     wiring (darakjianSearchCatalog in product_screen.js) is unchanged and
+                     already has two real bugfixes behind it, so re-enabling later is just
+                     removing "d-none" here. -->
+                <button class="darakjian-search-full btn btn-secondary d-none"
                         t-on-click="() => this.darakjianSearchCatalog()">
                     <i class="fa fa-search me-1"/> Buscar en catalogo completo
                 </button>
