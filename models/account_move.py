@@ -21,4 +21,17 @@ class AccountMoveLine(models.Model):
         pos_lines = move.sudo().pos_order_ids.lines.filtered(
             lambda l: l.product_id == self.product_id and l.pack_lot_ids
         )
-        return pos_lines.pack_lot_ids.mapped("lot_name")
+        result = []
+        for pack_lot in pos_lines.pack_lot_ids:
+            result.append(pack_lot.lot_name)
+            # weight_grams lives on stock.lot (yaguven_darakjian_etiquetas), matched by
+            # name the same way the POS cart/ticket does it (overrides/pos_order_line.js)
+            # -- pack_lot_ids is the order line's own client-side record, the weight is
+            # on the catalogue's stock.lot, the two meet only through the serial text.
+            lot = self.env["stock.lot"].sudo().search(
+                [("name", "=", pack_lot.lot_name), ("product_id", "=", self.product_id.id)],
+                limit=1,
+            )
+            if lot and lot.weight_grams:
+                result.append("Weight %.2f g" % lot.weight_grams)
+        return result

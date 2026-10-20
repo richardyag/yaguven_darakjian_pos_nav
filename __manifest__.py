@@ -18,7 +18,7 @@ exception is weight_grams on stock.lot, which is owned and defined by
 yaguven_darakjian_etiquetas (hence the added dependency below); this module only reads
 it, to print it next to the serial on the cart and the receipt.
 """,
-    "version": "19.0.1.14.0",
+    "version": "19.0.1.15.0",
     "category": "Point of Sale",
     "author": "Yagüven C.G.",
     "website": "https://github.com/Darakjian/yaguven_darakjian_pos_nav",
