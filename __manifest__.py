@@ -13,15 +13,18 @@ Improves category navigation in the Point of Sale for Darakjian Jewelers:
 
 Responsive by design: enlarged touch targets on tablet (pointer: coarse) and a dense
 view on desktop. All the logic lives inside the module, as inheritance and patches over
-the native OWL Point of Sale, with no fields added to native models.
+the native OWL Point of Sale. No fields of its own added to native models - the one
+exception is weight_grams on stock.lot, which is owned and defined by
+yaguven_darakjian_etiquetas (hence the added dependency below); this module only reads
+it, to print it next to the serial on the cart and the receipt.
 """,
-    "version": "19.0.1.13.2",
+    "version": "19.0.1.14.0",
     "category": "Point of Sale",
     "author": "Yagüven C.G.",
     "website": "https://github.com/Darakjian/yaguven_darakjian_pos_nav",
     "license": "LGPL-3",
-    # Stock Odoo only: the POS and its framework. No OCA, no third-party modules.
-    "depends": ["point_of_sale", "account"],
+    # Stock Odoo only, plus the sibling module that owns the piece's weight field.
+    "depends": ["point_of_sale", "account", "yaguven_darakjian_etiquetas"],
     "data": [
         "security/ir.model.access.csv",
         "views/darakjian_pos_facet_views.xml",
@@ -43,6 +46,7 @@ the native OWL Point of Sale, with no fields added to native models.
             "yaguven_darakjian_pos_nav/static/src/overrides/product_screen.js",
             "yaguven_darakjian_pos_nav/static/src/overrides/payment_screen.js",
             "yaguven_darakjian_pos_nav/static/src/overrides/pos_order.js",
+            "yaguven_darakjian_pos_nav/static/src/overrides/pos_order_line.js",
             "yaguven_darakjian_pos_nav/static/src/overrides/product_screen.xml",
             "yaguven_darakjian_pos_nav/static/src/overrides/product_card.js",
             "yaguven_darakjian_pos_nav/static/src/overrides/product_card.xml",

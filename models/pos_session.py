@@ -290,7 +290,11 @@ class StockLot(models.Model):
 
     @api.model
     def _load_pos_data_fields(self, config):
-        return ["id", "name"]
+        # weight_grams is defined by yaguven_darakjian_etiquetas (the module that owns
+        # the piece's serial data), not by this one - see the depends added for it below.
+        # Read here for the Orderline patch (overrides/pos_order_line.js) that prints it
+        # next to "SN <serial>" on both the cart and the receipt.
+        return ["id", "name", "weight_grams"]
 
 
 class StockQuant(models.Model):
